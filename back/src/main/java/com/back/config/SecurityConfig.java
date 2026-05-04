@@ -1,6 +1,7 @@
 package com.back.config;
 
 import com.back.common.model.dto.response.ApiResponse;
+import com.back.common.utils.Translator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,7 +75,7 @@ public class SecurityConfig {
                     response.setContentType("application/json");
                     response.setCharacterEncoding("UTF-8");
                     ApiResponse<Object> apiResponse = ApiResponse.builder()
-                            .message("Unauthorized: Please login")
+                            .message(Translator.toLocale("error.unauthorized_login", "Unauthorized: Please login"))
                             .status(401)
                             .timestamp(java.time.LocalDateTime.now())
                             .build();
@@ -85,7 +86,7 @@ public class SecurityConfig {
                     response.setContentType("application/json");
                     response.setCharacterEncoding("UTF-8");
                     ApiResponse<Object> apiResponse = ApiResponse.builder()
-                            .message("Forbidden: You don't have permission")
+                            .message(Translator.toLocale("error.forbidden_permission", "Forbidden: You don't have permission"))
                             .status(403)
                             .timestamp(java.time.LocalDateTime.now())
                             .build();

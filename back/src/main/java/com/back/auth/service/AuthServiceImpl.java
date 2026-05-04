@@ -7,6 +7,7 @@ import com.back.auth.model.dto.response.AuthResult;
 import com.back.auth.security.jwt.JwtService;
 import com.back.common.service.cookieservice.CookieService;
 import com.back.common.service.emailservice.EmailService;
+import com.back.common.utils.Translator;
 import com.back.common.utils.exception.AppException;
 import com.back.common.utils.exception.ErrorCode;
 import com.back.user.model.dto.response.UserInfo;
@@ -43,6 +44,7 @@ public class AuthServiceImpl implements IAuthService {
     private final CookieService cookieService;
     private final BlacklistedTokenService blacklistedTokenService;
     private final VerificationTokenService verificationTokenService;
+    private final Translator translator;
 
     @Value("${jwt.access-token-expiration}")
     private Long accessTokenExpiration;
@@ -55,7 +57,7 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     @Transactional
-    public AuthResult login(LoginRequest loginRequest) {
+    public AuthResult login(LoginRequest loginRequest, HttpServletResponse response) {
         User user = userRepo.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.WRONG_EMAIL_OR_PASSWORD));
 
@@ -79,6 +81,8 @@ public class AuthServiceImpl implements IAuthService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
+        cookieService.add(response, "refreshToken", refreshToken, (int)(refreshTokenExpiration / 1000));
+
         UserInfo userInfo = buildUserInfo(user);
 
         AuthResponse authResponse = AuthResponse.builder()
@@ -90,7 +94,6 @@ public class AuthServiceImpl implements IAuthService {
 
         return AuthResult.builder()
                 .authResponse(authResponse)
-                .refreshToken(refreshToken)
                 .refreshTokenExpiresIn(refreshTokenExpiration / 1000)
                 .build();
     }
@@ -127,7 +130,7 @@ public class AuthServiceImpl implements IAuthService {
 
         User newUser = User.builder()
                 .username(registerRequest.getUsername())
-                .nickname(registerRequest.getUsername()) // Mặc định nickname = username
+                .nickname(registerRequest.getUsername())
                 .email(registerRequest.getEmail())
                 .password(passwordEncoder.encode(registerRequest.getPassword()))
                 .verified(false)
@@ -248,7 +251,8 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     @Transactional
-    public AuthResponse refreshToken(String refreshToken) {
+    public AuthResponse refreshToken(HttpServletRequest request) {
+        String refreshToken = cookieService.get(request, "refreshToken");
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
         }

@@ -3,6 +3,8 @@ package com.back.common.utils.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+import com.back.common.utils.Translator;
+
 @Getter
 public enum ErrorCode {
 
@@ -60,5 +62,13 @@ public enum ErrorCode {
     ErrorCode(HttpStatus status, String message) {
         this.status = status;
         this.message = message;
+    }
+
+    public String getMessage() {
+        try {
+            return Translator.toLocale("error." + this.name().toLowerCase(), this.message);
+        } catch (Exception e) {
+            return this.message;
+        }
     }
 }

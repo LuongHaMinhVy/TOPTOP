@@ -2,6 +2,7 @@ package com.back.auth.security.jwt;
 
 import com.back.common.model.dto.response.ApiResponse;
 import com.back.common.utils.exception.AppException;
+import com.back.common.utils.Translator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -95,7 +96,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             response.setCharacterEncoding("UTF-8");
 
             ApiResponse<Object> apiResponse = ApiResponse.builder()
-                    .message("Invalid token")
+                    .message(Translator.toLocale("error.invalid_token", "Invalid token"))
                     .status(401)
                     .timestamp(java.time.LocalDateTime.now())
                     .build();
