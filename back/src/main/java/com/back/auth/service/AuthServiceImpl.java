@@ -223,7 +223,7 @@ public class AuthServiceImpl implements IAuthService {
         verificationTokenService.savePasswordResetToken(email, resetToken);
 
         String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
-        String subject = "Đặt lại mật khẩu TikTok";
+        String subject = Translator.toLocale("email.forgot_password.subject");
         String htmlContent = buildPasswordResetEmail(user.getNickname(), resetLink);
 
         emailService.sendHtmlEmail(email, subject, htmlContent);
@@ -313,8 +313,7 @@ public class AuthServiceImpl implements IAuthService {
         verificationTokenService.saveVerificationToken(user.getEmail(), token);
 
         String verificationLink = frontendUrl + "/verify-email?token=" + token;
-
-        String subject = "Xác thực email TikTok của bạn";
+        String subject = Translator.toLocale("email.verify.subject");
         String htmlContent = buildVerificationEmail(user.getNickname(), verificationLink);
 
         emailService.sendHtmlEmail(user.getEmail(), subject, htmlContent);
@@ -322,6 +321,13 @@ public class AuthServiceImpl implements IAuthService {
     }
 
     private String buildVerificationEmail(String nickname, String verificationLink) {
+        String greeting = Translator.toLocale("email.verify.greeting", new Object[]{nickname});
+        String body = Translator.toLocale("email.verify.body");
+        String button = Translator.toLocale("email.verify.button");
+        String copyLink = Translator.toLocale("email.verify.copy_link");
+        String expiry = Translator.toLocale("email.verify.expiry");
+        String footerIgnore = Translator.toLocale("email.verify.footer_ignore");
+
         return """
                 <!DOCTYPE html>
                 <html>
@@ -342,26 +348,36 @@ public class AuthServiceImpl implements IAuthService {
                             <h1>🎵 TikTok</h1>
                         </div>
                         <div class="content">
-                            <h2>Xin chào %s!</h2>
-                            <p>Cảm ơn bạn đã đăng ký tài khoản TikTok. Vui lòng xác thực email của bạn để bắt đầu sử dụng.</p>
+                            <h2>%s</h2>
+                            <p>%s</p>
                             <p style="text-align: center;">
-                                <a href="%s" class="button">Xác thực email</a>
+                                <a href="%s" class="button">%s</a>
                             </p>
-                            <p>Hoặc copy link sau vào trình duyệt:</p>
+                            <p>%s</p>
                             <p style="word-break: break-all; color: #666;">%s</p>
-                            <p><strong>Lưu ý:</strong> Link này sẽ hết hạn sau 24 giờ.</p>
+                            <p>%s</p>
                         </div>
                         <div class="footer">
                             <p>© 2024 TikTok. All rights reserved.</p>
-                            <p>Nếu bạn không tạo tài khoản này, vui lòng bỏ qua email này.</p>
+                            <p>%s</p>
                         </div>
                     </div>
                 </body>
                 </html>
-                """.formatted(nickname, verificationLink, verificationLink);
+                """.formatted(greeting, body, verificationLink, button, copyLink, verificationLink, expiry, footerIgnore);
     }
 
     private String buildPasswordResetEmail(String nickname, String resetLink) {
+        String greeting = Translator.toLocale("email.reset_password.greeting", new Object[]{nickname});
+        String body = Translator.toLocale("email.reset_password.body");
+        String button = Translator.toLocale("email.reset_password.button");
+        String copyLink = Translator.toLocale("email.reset_password.copy_link");
+        String warningTitle = Translator.toLocale("email.reset_password.warning_title");
+        String warningExpiry = Translator.toLocale("email.reset_password.warning_expiry");
+        String warningOnce = Translator.toLocale("email.reset_password.warning_once");
+        String warningNoShare = Translator.toLocale("email.reset_password.warning_no_share");
+        String footerIgnore = Translator.toLocale("email.reset_password.footer_ignore");
+
         return """
                 <!DOCTYPE html>
                 <html>
@@ -380,32 +396,33 @@ public class AuthServiceImpl implements IAuthService {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1> Đặt lại mật khẩu</h1>
+                            <h1>🔒 %s</h1>
                         </div>
                         <div class="content">
-                            <h2>Xin chào %s!</h2>
-                            <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản TikTok của bạn.</p>
+                            <h2>%s</h2>
+                            <p>%s</p>
                             <p style="text-align: center;">
-                                <a href="%s" class="button">Đặt lại mật khẩu</a>
+                                <a href="%s" class="button">%s</a>
                             </p>
-                            <p>Hoặc copy link sau vào trình duyệt:</p>
+                            <p>%s</p>
                             <p style="word-break: break-all; color: #666;">%s</p>
                             <div class="warning">
-                                <strong>⚠️ Lưu ý bảo mật:</strong>
+                                <strong>⚠️ %s</strong>
                                 <ul>
-                                    <li>Link này sẽ hết hạn sau 1 giờ</li>
-                                    <li>Chỉ sử dụng một lần</li>
-                                    <li>Không chia sẻ link này với bất kỳ ai</li>
+                                    <li>%s</li>
+                                    <li>%s</li>
+                                    <li>%s</li>
                                 </ul>
                             </div>
                         </div>
                         <div class="footer">
                             <p>© 2024 TikTok. All rights reserved.</p>
-                            <p><strong>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này và đảm bảo tài khoản của bạn an toàn.</strong></p>
+                            <p><strong>%s</strong></p>
                         </div>
                     </div>
                 </body>
                 </html>
-                """.formatted(nickname, resetLink, resetLink);
+                """.formatted(button, greeting, body, resetLink, button, copyLink, resetLink,
+                        warningTitle, warningExpiry, warningOnce, warningNoShare, footerIgnore);
     }
 }
