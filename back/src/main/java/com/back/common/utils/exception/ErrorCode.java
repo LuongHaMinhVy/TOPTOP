@@ -52,6 +52,8 @@ public enum ErrorCode {
 
     GENRE_ALREADY_EXISTS(HttpStatus.CONFLICT, "Genre already exists"),
 
+    OAUTH2_EMAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "Email not found in OAuth2 provider"),
+
     COPYRIGHT_DETECTED(HttpStatus.BAD_REQUEST, "Upload rejected: Copyrighted material detected."),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
 

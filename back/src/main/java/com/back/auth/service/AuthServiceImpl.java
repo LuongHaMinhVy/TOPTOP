@@ -113,7 +113,7 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     @Transactional
-    public AuthResult register(RegisterRequest registerRequest) {
+    public void register(RegisterRequest registerRequest) {
         if (userRepo.existsByEmail(registerRequest.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
@@ -154,24 +154,6 @@ public class AuthServiceImpl implements IAuthService {
         log.info("User registered successfully: {}", savedUser.getEmail());
 
         sendVerificationEmail(savedUser);
-
-        String accessToken = jwtService.generateAccessToken(savedUser);
-        String refreshToken = jwtService.generateRefreshToken(savedUser);
-
-        UserInfo userInfo = buildUserInfo(savedUser);
-
-        AuthResponse authResponse = AuthResponse.builder()
-                .user(userInfo)
-                .accessToken(accessToken)
-                .tokenType("Bearer")
-                .expiresIn(accessTokenExpiration / 1000)
-                .build();
-
-        return AuthResult.builder()
-                .authResponse(authResponse)
-                .refreshToken(refreshToken)
-                .refreshTokenExpiresIn(refreshTokenExpiration / 1000)
-                .build();
     }
 
     @Override
@@ -345,7 +327,7 @@ public class AuthServiceImpl implements IAuthService {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>🎵 TikTok</h1>
+                            <h1>🎵 TopTop</h1>
                         </div>
                         <div class="content">
                             <h2>%s</h2>

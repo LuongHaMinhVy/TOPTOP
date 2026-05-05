@@ -4,19 +4,27 @@ import { useState } from "react";
 import { 
   QrCode, 
   User, 
-  Apple, 
   ChevronLeft,
   X,
   Loader2
 } from "lucide-react";
 import Link from "next/link";
+
+
 import { useRouter } from "next/navigation";
+import { authLogin } from "@/services/auth-api-service";
+import Facebook from "@/components/FaceBookIcon";
+import Google from "@/components/GoogleIcon";
+import { useDispatch } from "react-redux";
+import { setToken, setUser } from "@/store/authSlice";
 
 type AuthMethod = "options" | "phone_email";
+
 
 export default function LoginPage() {
 
   const router = useRouter();
+  const dispatch = useDispatch();
   const [authMethod, setAuthMethod] = useState<AuthMethod>("options");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -25,7 +33,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+  const handleFacebookLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/login/oauth2/code/facebook`;
+  }
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/oauth2/authorization/google`;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,26 +48,17 @@ export default function LoginPage() {
     setSuccessMsg("");
 
     try {
-      const payload = { email, password };
+      const response = await authLogin({ email, password });
 
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "An error occurred");
-      }
-
-      setSuccessMsg(data.message || "Login successful");
+      setSuccessMsg(response.message || "Login successful");
       
-      if (data.data && data.data.accessToken) {
-        localStorage.setItem("token", data.data.accessToken);
+      if (response.data && response.data.accessToken) {
+        localStorage.setItem("token", response.data.accessToken);
+        dispatch(setToken(response.data.accessToken));
+        
+        if (response.data.user) {
+          dispatch(setUser(response.data.user));
+        }
       }
       setTimeout(() => {
         router.push("/");
@@ -90,9 +95,14 @@ export default function LoginPage() {
           <span className="flex-1 text-center font-semibold text-[16px]">Use phone / email / username</span>
         </button>
 
-        <button className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
-          <Apple className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Apple</span>
+        <button onClick={() => handleGoogleLogin()} className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
+          <Google className="w-5 h-5 ml-2" />
+          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Google</span>
+        </button>
+
+        <button onClick={() => handleFacebookLogin()} className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
+          <Facebook className="w-5 h-5 ml-2" />
+          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Facebook</span>
         </button>
       </div>
     </div>

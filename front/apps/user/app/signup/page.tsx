@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { authRegister } from "@/services/auth-api-service";
 
 type AuthMethod = "options" | "phone_email";
 
@@ -27,8 +28,6 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -36,23 +35,9 @@ export default function SignupPage() {
     setSuccessMsg("");
 
     try {
-      const payload = { username, email, password, dateOfBirth };
+      const response = await authRegister({ username, email, password, dateOfBirth });
 
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || "An error occurred");
-      }
-
-      setSuccessMsg(data.message || "Registration successful");
+      setSuccessMsg(response.message || "Registration successful");
       
       setTimeout(() => {
         router.push("/login");

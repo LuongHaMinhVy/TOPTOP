@@ -12,7 +12,7 @@ public interface IAuthService{
 
     void logout(HttpServletRequest request, HttpServletResponse response);
 
-    AuthResult register(RegisterRequest registerRequest);
+    void register(RegisterRequest registerRequest);
     void verifyEmail(String token);
     void resendVerification(String email);
     void forgotPassword(String email);

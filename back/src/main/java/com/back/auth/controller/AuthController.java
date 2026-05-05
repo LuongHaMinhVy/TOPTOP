@@ -4,7 +4,6 @@ import com.back.auth.model.dto.request.LoginRequest;
 import com.back.auth.model.dto.request.RegisterRequest;
 import com.back.auth.model.dto.request.ResetPasswordRequest;
 import com.back.auth.model.dto.response.AuthResponse;
-import com.back.auth.model.dto.response.AuthResult;
 import com.back.auth.service.IAuthService;
 import com.back.common.model.dto.response.ApiResponse;
 import com.back.common.utils.Translator;
@@ -26,10 +25,10 @@ public class AuthController{
     private final IAuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResult>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
-        AuthResult result = authService.login(loginRequest, response);
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
+        AuthResponse result = authService.login(loginRequest, response).getAuthResponse();
 
-        return ResponseEntity.ok(ApiResponse.<AuthResult>builder()
+        return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                 .message(Translator.toLocale("auth.login.success", "Login successful"))
                 .data(result)
                 .status(200)
@@ -38,10 +37,10 @@ public class AuthController{
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResult>> register(@Valid @RequestBody RegisterRequest registerRequest){
-        return ResponseEntity.ok(ApiResponse.<AuthResult>builder()
+    public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest registerRequest){
+        authService.register(registerRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<Void>builder()
                 .message(Translator.toLocale("auth.register.success", "Registration successful. Please verify your email to login"))
-                        .data(authService.register(registerRequest))
                 .status(HttpStatus.CREATED.value())
                 .timestamp(LocalDateTime.now()).build());
     }
@@ -49,7 +48,6 @@ public class AuthController{
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(HttpServletRequest request, HttpServletResponse response){
         authService.logout(request, response);
-
         return ResponseEntity.ok(ApiResponse.<Void>builder()
                         .message(Translator.toLocale("auth.logout.success", "Logout successful"))
                         .status(HttpStatus.NO_CONTENT.value())

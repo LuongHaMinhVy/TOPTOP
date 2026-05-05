@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import StoreProvider from "@/store/StoreProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +36,9 @@ export default async function LocaleLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-hidden`}
     >
       <body className="min-h-full flex flex-col overflow-hidden">
+        <StoreProvider>
           {children}
+        </StoreProvider>
       </body>
     </html>
   );
