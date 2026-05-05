@@ -51,7 +51,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         String accessToken  = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
-        
+
         AuthResponse authResponse = authResponseMapper.toAuthResponse(user, accessToken);
 
         String stateKey = oAuth2StateCache.store(authResponse);

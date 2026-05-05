@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +74,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .avatarUrl(avatarUrl)
                 .followersCount(0L)
                 .followingCount(0L)
+                .gender(Gender.OTHER)
                 .totalLikes(0L)
                 .videoCount(0L)
                 .isPrivate(false)
@@ -83,6 +85,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .allowDownload(true)
                 .allowMessageFromEveryone(false)
                 .dateOfBirth(LocalDate.of(2000, 1, 1))
+                .createdAt(LocalDateTime.now())
                 .build();
 
         User saved = userRepo.save(newUser);
