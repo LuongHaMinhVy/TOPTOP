@@ -22,6 +22,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "@repo/shared": "*",
     "@reduxjs/toolkit": "^2.11.2",
     "axios": "^1.16.0",
     "lucide-react": "^1.14.0",
