@@ -6,6 +6,14 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname, '../../'),
   },
   allowedDevOrigins: ['26.87.198.178', 'http://[IP_ADDRESS]', 'http://localhost'],
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8080/api/:path*',
+      },
+    ];
+  },
 }
 
 export default nextConfig

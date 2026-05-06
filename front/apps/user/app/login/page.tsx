@@ -9,37 +9,32 @@ import {
   Loader2
 } from "lucide-react";
 import Link from "next/link";
-
-
 import { useRouter } from "next/navigation";
 import { authLogin } from "@/services/auth-api-service";
 import Facebook from "@/components/FaceBookIcon";
 import Google from "@/components/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { setToken, setUser } from "@/store/authSlice";
+import { setCredentials } from "@/store/authSlice";
 
 type AuthMethod = "options" | "phone_email";
 
-
 export default function LoginPage() {
-
   const router = useRouter();
   const dispatch = useDispatch();
   const [authMethod, setAuthMethod] = useState<AuthMethod>("options");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleFacebookLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/login/oauth2/code/facebook`;
-  }
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/oauth2/authorization/google`;
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,15 +46,11 @@ export default function LoginPage() {
       const response = await authLogin({ email, password });
 
       setSuccessMsg(response.message || "Login successful");
-      
-      if (response.data && response.data.accessToken) {
-        localStorage.setItem("token", response.data.accessToken);
-        dispatch(setToken(response.data.accessToken));
-        
-        if (response.data.user) {
-          dispatch(setUser(response.data.user));
-        }
+
+      if (response.data) {
+        dispatch(setCredentials(response.data));
       }
+
       setTimeout(() => {
         router.push("/");
       }, 1000);
@@ -83,7 +74,7 @@ export default function LoginPage() {
           <span className="flex-1 text-center font-semibold text-[16px]">Use QR code</span>
         </button>
 
-        <button 
+        <button
           onClick={() => {
             setAuthMethod("phone_email");
             setErrorMsg("");
@@ -95,12 +86,18 @@ export default function LoginPage() {
           <span className="flex-1 text-center font-semibold text-[16px]">Use phone / email / username</span>
         </button>
 
-        <button onClick={() => handleGoogleLogin()} className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
+        <button
+          onClick={handleGoogleLogin}
+          className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
+        >
           <Google className="w-5 h-5 ml-2" />
           <span className="flex-1 text-center font-semibold text-[16px]">Continue with Google</span>
         </button>
 
-        <button onClick={() => handleFacebookLogin()} className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
+        <button
+          onClick={handleFacebookLogin}
+          className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
+        >
           <Facebook className="w-5 h-5 ml-2" />
           <span className="flex-1 text-center font-semibold text-[16px]">Continue with Facebook</span>
         </button>
@@ -111,22 +108,18 @@ export default function LoginPage() {
   const renderForm = () => (
     <div className="flex flex-col h-full">
       <div className="flex items-center mb-6">
-        <button 
+        <button
           onClick={() => setAuthMethod("options")}
           className="p-2 -ml-2 rounded-full hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="text-[28px] font-bold mx-auto text-text-primary">
-          Log in
-        </h2>
+        <h2 className="text-[28px] font-bold mx-auto text-text-primary">Log in</h2>
         <div className="w-10"></div>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <span className="font-semibold text-[16px] text-text-primary">
-          Email / Username
-        </span>
+        <span className="font-semibold text-[16px] text-text-primary">Email / Username</span>
       </div>
 
       {errorMsg && (
@@ -151,7 +144,6 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-
           <input
             type="password"
             placeholder="Password"
@@ -162,11 +154,14 @@ export default function LoginPage() {
           />
         </div>
 
-        <Link href="#" className="text-[14px] font-semibold text-text-secondary hover:underline hover:text-text-primary mt-2">
+        <Link
+          href="#"
+          className="text-[14px] font-semibold text-text-secondary hover:underline hover:text-text-primary mt-2"
+        >
           Forgot password?
         </Link>
 
-        <button 
+        <button
           type="submit"
           className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
           disabled={isLoading || !email || !password}
@@ -181,8 +176,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[rgba(0,0,0,0.7)] px-4">
       <div className="w-full max-w-[480px] bg-transparent rounded-[12px] p-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.5)] relative flex flex-col">
-        
-        <Link href="/" className="absolute top-4 right-4 p-2 rounded-full text-text-secondary hover:bg-[rgba(255,255,255,0.1)] hover:text-text-primary transition-colors">
+        <Link
+          href="/"
+          className="absolute top-4 right-4 p-2 rounded-full text-text-secondary hover:bg-[rgba(255,255,255,0.1)] hover:text-text-primary transition-colors"
+        >
           <X className="w-6 h-6" />
         </Link>
 
@@ -197,20 +194,14 @@ export default function LoginPage() {
             {" "}and confirm that you have read our{" "}
             <Link href="#" className="text-text-primary hover:underline">Privacy Policy</Link>.
           </p>
-          
+
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[15px] text-text-primary">
-              Don't have an account?
-            </span>
-            <Link 
-              href="/signup"
-              className="text-brand font-bold text-[15px] hover:underline"
-            >
+            <span className="text-[15px] text-text-primary">Don't have an account?</span>
+            <Link href="/signup" className="text-brand font-bold text-[15px] hover:underline">
               Sign up
             </Link>
           </div>
         </div>
-
       </div>
     </div>
   );

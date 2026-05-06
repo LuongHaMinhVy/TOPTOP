@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import VideoCard from "../components/VideoCard";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/store/store";
+import { clearCredentials } from "@/store/authSlice";
 
 const FAKE_FOLLOWING = [
   { name: "rivine", username: "@rivine7", color: "#FF6B6B" },
@@ -19,6 +22,11 @@ export default function HomePage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const isLoggedIn = useSelector((state: RootState) => !!state.auth.accessToken);
+  const dispatch = useDispatch<AppDispatch>();
+  const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
 
   const openSearch = () => {
     setSearchOpen(true);
@@ -50,9 +58,21 @@ export default function HomePage() {
           <Search className="w-4 h-4 text-text-muted flex-shrink-0" />
           <input type="text" placeholder="Search" className="bg-transparent flex-1 text-text-primary placeholder:text-text-muted text-[14px] focus:outline-none h-full min-w-0" />
         </div>
-        <Link href="/login">
-          <button className="btn-primary flex-shrink-0" style={{ height: 32, fontSize: 14, minWidth: 72, padding: "0 14px" }}>Log in</button>
-        </Link>
+        {mounted && isLoggedIn && user ? (
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-elevated flex items-center justify-center">
+              {user.avatarUrl
+                ? <img src={user.avatarUrl} alt={user.nickname ?? ""} className="w-full h-full object-cover" />
+                : <span className="text-[13px] font-bold">{(user.nickname ?? user.username ?? "U")[0].toUpperCase()}</span>
+              }
+            </div>
+            <span className="text-[14px] font-semibold">{user.nickname ?? user.username}</span>
+          </div>
+        ) : (
+          <Link href="/login">
+            <button className="btn-primary" style={{ height: 30, fontSize: 13, minWidth: 64, padding: "0 12px" }}>Log in</button>
+          </Link>
+        )}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -123,12 +143,14 @@ export default function HomePage() {
                 </li>
               </ul>
 
-              <div className="mx-4 mt-4 mb-3 border-t border-elevated pt-4">
-                <p className="text-text-secondary text-[13px] mb-3 leading-relaxed">Log in to follow creators, like videos, and view comments.</p>
-                <Link href="/login" className="block">
-                  <button className="btn-secondary w-full">Log in</button>
-                </Link>
-              </div>
+              {!mounted || !isLoggedIn && (
+                <div className="mx-4 mt-4 mb-3 border-t border-elevated pt-4">
+                  <p className="text-text-secondary text-[13px] mb-3 leading-relaxed">Log in to follow creators, like videos, and view comments.</p>
+                  <Link href="/login" className="block">
+                    <button className="btn-secondary w-full">Log in</button>
+                  </Link>
+                </div>
+              )}
 
               <div className="px-4 pb-4">
                 <div className="flex flex-wrap gap-x-2 gap-y-1 mb-2">
@@ -191,15 +213,43 @@ export default function HomePage() {
         </div>
 
         <main className="flex-1 relative overflow-hidden bg-background">
-          <div className="hidden lg:flex fixed top-3 right-5 items-center gap-2 z-50 bg-background/70 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-elevated shadow-lg">
-            <Link href="/login">
-              <button className="btn-primary" style={{ height: 30, fontSize: 13, minWidth: 64, padding: "0 12px" }}>
-                Log in
-              </button>
-            </Link>
-            <button className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-hover transition-colors text-text-muted hover:text-text-primary">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+          <div className="hidden lg:flex fixed top-3 right-5 items-center gap-3 z-50 bg-background/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-elevated shadow-lg">
+            {mounted && isLoggedIn && user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-hover cursor-pointer transition-colors">
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-elevated flex items-center justify-center border border-elevated">
+                    {user.avatarUrl ? (
+                      <img src={user.avatarUrl} alt={user.nickname ?? ""} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-[13px] font-bold">
+                        {(user.nickname ?? user.username ?? "U")[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[15px] font-semibold text-text-primary">
+                    {user.nickname ?? user.username}
+                  </span>
+                </div>
+                <div className="w-[1px] h-4 bg-elevated mx-1" />
+                <button 
+                  onClick={() => dispatch(clearCredentials())}
+                  className="text-[14px] font-medium text-text-muted hover:text-brand transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <>
+                <Link href="/login">
+                  <button className="btn-primary" style={{ height: 32, fontSize: 14, minWidth: 80, padding: "0 16px" }}>
+                    Log in
+                  </button>
+                </Link>
+                <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-hover transition-colors text-text-muted hover:text-text-primary">
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+              </>
+            )}
           </div>
 
           <div

@@ -7,6 +7,7 @@ import com.back.auth.model.dto.response.AuthResponse;
 import com.back.auth.service.IAuthService;
 import com.back.common.model.dto.response.ApiResponse;
 import com.back.common.utils.Translator;
+import com.back.common.utils.redis.RateLimit;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public class AuthController{
     private final IAuthService authService;
 
     @PostMapping("/login")
+    @RateLimit(limit = 10, durationInSeconds = 60)
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
         AuthResponse result = authService.login(loginRequest, response).getAuthResponse();
 
@@ -37,6 +39,7 @@ public class AuthController{
     }
 
     @PostMapping("/register")
+    @RateLimit(limit = 10, durationInSeconds = 60)
     public ResponseEntity<ApiResponse<Void>> register(@Valid @RequestBody RegisterRequest registerRequest){
         authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.<Void>builder()

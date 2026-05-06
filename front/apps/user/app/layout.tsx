@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,6 +14,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
+const queryClient = new QueryClient()
+
 export const metadata: Metadata = {
   title: {
     template: "%s | TOPTOP",
@@ -21,14 +25,11 @@ export const metadata: Metadata = {
   description: "A TikTok clone application",
 };
 
-export default async function LocaleLayout({
-  children,
-  params
+export default function LocaleLayout({
+  children
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
 }) {
- 
 
   return (
     <html

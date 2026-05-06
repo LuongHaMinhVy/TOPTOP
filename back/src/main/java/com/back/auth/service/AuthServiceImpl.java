@@ -10,6 +10,7 @@ import com.back.common.service.emailservice.EmailService;
 import com.back.common.utils.Translator;
 import com.back.common.utils.exception.AppException;
 import com.back.common.utils.exception.ErrorCode;
+import com.back.user.mapper.UserInfoMapper;
 import com.back.user.model.dto.response.UserInfo;
 import com.back.user.model.entity.*;
 import com.back.user.repo.IRoleRepo;
@@ -83,7 +84,7 @@ public class AuthServiceImpl implements IAuthService {
 
         cookieService.add(response, "refreshToken", refreshToken, (int)(refreshTokenExpiration / 1000));
 
-        UserInfo userInfo = buildUserInfo(user);
+        UserInfo userInfo = UserInfoMapper.buildUserInfo(user);
 
         AuthResponse authResponse = AuthResponse.builder()
                 .user(userInfo)
@@ -248,45 +249,13 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         String newAccessToken = jwtService.generateAccessToken(user);
-        UserInfo userInfo = buildUserInfo(user);
+        UserInfo userInfo = UserInfoMapper.buildUserInfo(user);
 
         return AuthResponse.builder()
                 .user(userInfo)
                 .accessToken(newAccessToken)
                 .tokenType("Bearer")
                 .expiresIn(accessTokenExpiration / 1000)
-                .build();
-    }
-
-    private UserInfo buildUserInfo(User user) {
-        List<String> roles = user.getRoles().stream()
-                .map(role -> role.getName().name())
-                .collect(Collectors.toList());
-
-        return UserInfo.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .nickname(user.getNickname())
-                .email(user.getEmail())
-                .bio(user.getBio())
-                .avatarUrl(user.getAvatarUrl())
-                .coverUrl(user.getCoverUrl())
-                .followersCount(user.getFollowersCount())
-                .followingCount(user.getFollowingCount())
-                .totalLikes(user.getTotalLikes())
-                .videoCount(user.getVideoCount())
-                .verified(user.getVerified())
-                .isPrivate(user.getIsPrivate())
-                .status(user.getStatus().name())
-                .accountType(user.getAccountType().name())
-                .websiteUrl(user.getWebsiteUrl())
-                .instagramHandle(user.getInstagramHandle())
-                .youtubeHandle(user.getYoutubeHandle())
-                .gender(user.getGender() != null ? user.getGender().name() : null)
-                .region(user.getRegion())
-                .dateOfBirth(user.getDateOfBirth())
-                .roles(roles)
-                .createdAt(user.getCreatedAt())
                 .build();
     }
 
