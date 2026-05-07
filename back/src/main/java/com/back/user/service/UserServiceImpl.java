@@ -9,8 +9,17 @@ import com.back.user.model.entity.User;
 import com.back.user.repo.IRoleRepo;
 import com.back.user.repo.IUserRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import java.util.Objects;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService{
@@ -19,9 +28,22 @@ public class UserServiceImpl implements IUserService{
     private final JwtService jwtService;
 
     @Override
-    public UserInfo getUserInfo(String accessToken){
-        User user = userRepo.findByEmail(jwtService.extractEmail(accessToken))
-                .orElseThrow(() -> new AppException(ErrorCode.WRONG_EMAIL_OR_PASSWORD));
+    public UserInfo getUserInfo(HttpServletRequest request) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email;
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            email = oauthToken.getPrincipal().getAttribute("email");
+        } else {
+            email = authentication.getName();
+        }
+
+        if (email == null) {
+            throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
+        }
+
+        User user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_FOUND));
 
         return UserInfoMapper.buildUserInfo(user);
     }

@@ -17,6 +17,7 @@ import com.back.user.repo.IRoleRepo;
 import com.back.user.repo.IUserRepo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,10 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,9 +55,9 @@ public class AuthServiceImpl implements IAuthService {
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    @Override
     @Transactional
-    public AuthResult login(LoginRequest loginRequest, HttpServletResponse response) {
+    @Override
+    public AuthResult login(LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request) {
         User user = userRepo.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new AppException(ErrorCode.WRONG_EMAIL_OR_PASSWORD));
 
@@ -82,15 +81,15 @@ public class AuthServiceImpl implements IAuthService {
         String accessToken = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        cookieService.add(response, "refreshToken", refreshToken, (int)(refreshTokenExpiration / 1000));
+        cookieService.add(response, "accessToken", accessToken,
+                (int)(accessTokenExpiration / 1000), request);
+        cookieService.add(response, "refreshToken", refreshToken,
+                (int)(refreshTokenExpiration / 1000), request);
 
         UserInfo userInfo = UserInfoMapper.buildUserInfo(user);
 
         AuthResponse authResponse = AuthResponse.builder()
                 .user(userInfo)
-                .accessToken(accessToken)
-                .tokenType("Bearer")
-                .expiresIn(accessTokenExpiration / 1000)
                 .build();
 
         return AuthResult.builder()
@@ -102,13 +101,24 @@ public class AuthServiceImpl implements IAuthService {
     @Override
     @Transactional
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String accessToken = jwtService.extractFromHeader(request);
+        String accessToken = cookieService.get(request, "accessToken");
+        if (accessToken == null) {
+            accessToken = jwtService.extractFromHeader(request);
+        }
         if (accessToken != null) {
             Instant expiryTime = jwtService.getExpirationTime(accessToken);
             blacklistedTokenService.add(accessToken, expiryTime);
             log.info("Access token blacklisted successfully");
         }
-        cookieService.clear(response, "refreshToken");
+        cookieService.clear(response, "accessToken", request);
+        cookieService.clear(response, "refreshToken", request);
+        
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.invalidate();
+        }
+        cookieService.clear(response, "JSESSIONID", request);
+
         log.info("User logged out successfully");
     }
 
@@ -234,7 +244,7 @@ public class AuthServiceImpl implements IAuthService {
 
     @Override
     @Transactional
-    public AuthResponse refreshToken(HttpServletRequest request) {
+    public AuthResponse refreshToken(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = cookieService.get(request, "refreshToken");
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
@@ -249,13 +259,12 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         String newAccessToken = jwtService.generateAccessToken(user);
+        cookieService.add(response, "accessToken", newAccessToken, (int)(accessTokenExpiration / 1000), request);
+        
         UserInfo userInfo = UserInfoMapper.buildUserInfo(user);
 
         return AuthResponse.builder()
                 .user(userInfo)
-                .accessToken(newAccessToken)
-                .tokenType("Bearer")
-                .expiresIn(accessTokenExpiration / 1000)
                 .build();
     }
 

@@ -7,7 +7,9 @@ import {
   Apple, 
   ChevronLeft,
   X,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,11 +27,45 @@ export default function SignupPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
 
+  const validateForm = () => {
+    if (username.length < 2 || username.length > 24) {
+      return "Username must be between 2 and 24 characters.";
+    }
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+      return "Username can only contain letters, numbers, dots, and underscores.";
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return "Invalid email format.";
+    }
+
+    if (password.length < 8 || password.length > 20) {
+      return "Password must be between 8 and 20 characters.";
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,20}$/.test(password)) {
+      return "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).";
+    }
+
+    if (!dateOfBirth) {
+      return "Date of birth is required.";
+    }
+
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const validationError = validateForm();
+    if (validationError) {
+      setErrorMsg(validationError);
+      return;
+    }
+
     setIsLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
@@ -130,14 +166,27 @@ export default function SignupPage() {
             onChange={(e) => setEmail(e.target.value)}
           />
 
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            className="input-field"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              required
+              className="input-field pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
 
           <input
             type="date"

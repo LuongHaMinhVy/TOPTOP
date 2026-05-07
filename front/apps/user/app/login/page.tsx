@@ -6,7 +6,9 @@ import {
   User, 
   ChevronLeft,
   X,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,7 @@ import Facebook from "@/components/FaceBookIcon";
 import Google from "@/components/GoogleIcon";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/store/authSlice";
+import { useMutation } from "@tanstack/react-query";
 
 type AuthMethod = "options" | "phone_email";
 
@@ -22,11 +25,11 @@ export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [authMethod, setAuthMethod] = useState<AuthMethod>("options");
-  const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleFacebookLogin = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/login/oauth2/code/facebook`;
@@ -36,30 +39,28 @@ export default function LoginPage() {
     window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/oauth2/authorization/google`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setErrorMsg("");
-    setSuccessMsg("");
-
-    try {
-      const response = await authLogin({ email, password });
-
+  const loginMutation = useMutation({
+    mutationFn: authLogin,
+    onSuccess: (response) => {
       setSuccessMsg(response.message || "Login successful");
-
       if (response.data) {
         dispatch(setCredentials(response.data));
       }
-
       setTimeout(() => {
         router.push("/");
       }, 1000);
-    } catch (err: unknown) {
+    },
+    onError: (err: unknown) => {
       const message = err instanceof Error ? err.message : "Failed to authenticate";
       setErrorMsg(message);
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg("");
+    setSuccessMsg("");
+    loginMutation.mutate({ email, password });
   };
 
   const renderOptions = () => (
@@ -69,11 +70,6 @@ export default function LoginPage() {
       </h2>
 
       <div className="flex flex-col gap-4">
-        <button className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
-          <QrCode className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Use QR code</span>
-        </button>
-
         <button
           onClick={() => {
             setAuthMethod("phone_email");
@@ -83,7 +79,7 @@ export default function LoginPage() {
           className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
         >
           <User className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Use phone / email / username</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Use email</span>
         </button>
 
         <button
@@ -144,14 +140,27 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            className="input-field"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              required
+              className="input-field pr-10"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-text-primary transition-colors"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5" />
+              ) : (
+                <Eye className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </div>
 
         <Link
@@ -164,9 +173,9 @@ export default function LoginPage() {
         <button
           type="submit"
           className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
-          disabled={isLoading || !email || !password}
+          disabled={loginMutation.isPending || !email || !password}
         >
-          {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+          {loginMutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
           Log in
         </button>
       </form>

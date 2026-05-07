@@ -1,72 +1,362 @@
-import { Heart, MessageCircle, Share2, Flame, Music } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, Music, Plus, Volume2, VolumeX, Play } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 interface VideoCardProps {
   index: number;
+  videoUrl?: string;
   username?: string;
   caption?: string;
   sound?: string;
   aspectRatio?: string;
-  videoLabel?: string;
-  clickLoginLabel?: string;
-}
-
-function getCardStyle(aspectRatio: string): React.CSSProperties {
-  const [w, h] = aspectRatio.split("/").map(Number);
-  const ratio = w / h;
-
-  if (ratio < 1) {
-    return { aspectRatio, width: "100%", maxWidth: "420px", maxHeight: "90%" };
-  } else {
-    return { aspectRatio, height: "80%", maxHeight: "80%", width: "auto", maxWidth: "90%" };
-  }
+  avatarUrl?: string;
+  likes?: string;
+  comments?: string;
+  saves?: string;
+  shares?: string;
 }
 
 export default function VideoCard({
   index,
-  username = "@username",
-  caption = "Amazing video caption!",
-  sound = "Original sound · TopTop",
+  videoUrl,
+  username = "baprang4k",
+  caption = "80% SINH VIÊN KHÔNG BIẾT NHỮNG MẸO NGẦM TÂM LÝ KHI BẢO VỆ KLTN...",
+  sound = "Original sound - baprang4k",
   aspectRatio = "9/16",
-  videoLabel = "Video",
-  clickLoginLabel = "Click \"Log in\" to get started",
+  avatarUrl = "https://p16-sign-va.tiktokcdn.com/tos-maliva-avt-0068/7313627042858860549~c5_100x100.jpeg?lk3s=30310797&x-expires=1715238000&x-signature=...", 
+  likes = "4549",
+  comments = "8",
+  saves = "2292",
+  shares = "495",
 }: VideoCardProps) {
-  const cardStyle = getCardStyle(aspectRatio);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+
+  const ratioParts = (aspectRatio || "9/16").split('/');
+  const isWide = ratioParts.length === 2 && (parseInt(ratioParts[0]) / parseInt(ratioParts[1]) > 1);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const isIntersectingRef = useRef(false);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        videoRef.current?.pause();
+        setIsPlaying(false);
+      } else if (isIntersectingRef.current) {
+        videoRef.current?.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isIntersectingRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0;
+            videoRef.current.play().catch(() => {});
+            setIsPlaying(true);
+          }
+        } else {
+          videoRef.current?.pause();
+          setIsPlaying(false);
+        }
+      },
+      { threshold: 0.6 }
+    );
+
+    if (videoRef.current) observer.observe(videoRef.current);
+    
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      observer.disconnect();
+    };
+  }, []);
+
+  const togglePlay = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const currentProgress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(currentProgress);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (videoRef.current && videoRef.current.duration) {
+      const val = parseFloat(e.target.value);
+      const seekTime = (val / 100) * videoRef.current.duration;
+      videoRef.current.currentTime = seekTime;
+      setProgress(val);
+      setIsMuted(false); 
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    setVolume(newVolume);
+    if (videoRef.current) {
+      videoRef.current.volume = newVolume;
+      setIsMuted(newVolume === 0); // Unmute if volume > 0
+    }
+  };
 
   return (
     <div
-      className="flex items-center justify-center px-4 py-4"
-      style={{ height: "100%", scrollSnapAlign: "center", scrollSnapStop: "always" }}
+      className="flex items-center justify-center h-full w-full relative"
+      style={{ scrollSnapAlign: "center", scrollSnapStop: "always" }}
     >
-      <div
-        className="bg-surface rounded-[12px] flex items-center justify-center relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.3)] hover:scale-[1.01] transition-transform duration-200"
-        style={cardStyle}
-      >
-        <div className="text-center z-10">
-          <p className="font-semibold text-[18px] mb-2 text-text-primary">{videoLabel} {index + 1}</p>
-          <p className="text-[14px] text-text-muted">{clickLoginLabel}</p>
-        </div>
+      <div className="flex flex-col lg:flex-row items-center lg:items-end gap-3 lg:gap-5 w-full lg:w-auto px-4 lg:px-0">
+        {/* Main Content (Video + Info below) */}
+        <div className="flex flex-col w-full lg:w-auto items-center">
+          {/* Video Container */}
+          <div 
+            className="relative rounded-xl lg:rounded-lg overflow-hidden group shadow-2xl flex items-center justify-center bg-black"
+            style={{ 
+              maxHeight: isWide ? "60vh" : "calc(100vh - 20px)", 
+              maxWidth: "100%",
+            }}
+          >
+            {/* Video Content */}
+            {videoUrl ? (
+              <div className="relative w-full h-full flex items-center justify-center" onClick={togglePlay}>
+                <video 
+                  ref={videoRef}
+                  src={videoUrl} 
+                  className="w-auto h-auto block cursor-pointer"
+                  style={{ 
+                    maxHeight: isWide ? "60vh" : "calc(100vh - 20px)", 
+                    maxWidth: "100%",
+                  }}
+                  loop 
+                  muted={isMuted}
+                  playsInline
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata}
+                />
+                
+                {/* Play/Pause Overlay */}
+                {!isPlaying && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                    <div className="w-16 h-16 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
+                      <Play className="w-10 h-10 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
 
-        <div className="absolute right-4 bottom-24 flex flex-col gap-5 items-center z-20">
-          {[Heart, MessageCircle, Share2].map((Icon, j) => (
-            <div
-              key={j}
-              className="w-10 h-10 rounded-full bg-[rgba(255,255,255,0.1)] flex items-center justify-center hover:bg-[rgba(255,255,255,0.2)] transition-colors cursor-pointer"
-            >
-              <Icon className="w-5 h-5 text-white" />
+                {/* Progress Bar (TikTok style) */}
+                <div className="absolute bottom-0 left-0 w-full h-4 group-hover:h-6 flex items-end cursor-pointer z-50" onClick={(e) => e.stopPropagation()}>
+                  <div className="w-full h-1 group-hover:h-2 bg-white/20 transition-all relative">
+                    <div 
+                      className="h-full bg-brand relative"
+                      style={{ width: `${progress}%` }}
+                    >
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-brand rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                    <input 
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={progress}
+                      onChange={handleSeek}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Volume Control */}
+                <div 
+                  className="absolute top-4 right-4 z-50 flex items-center"
+                  onMouseEnter={() => setShowVolumeSlider(true)}
+                  onMouseLeave={() => setShowVolumeSlider(false)}
+                >
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMuted(!isMuted);
+                      if (isMuted && volume === 0) setVolume(0.5);
+                    }}
+                    className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/60 transition-colors z-10"
+                  >
+                    {isMuted || volume === 0 ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  </button>
+                  <div className={`flex items-center bg-black/40 backdrop-blur-md rounded-r-full pr-4 pl-1 h-10 transition-all duration-300 origin-left ${showVolumeSlider ? 'w-32 opacity-100' : 'w-0 opacity-0 overflow-hidden'}`}>
+                    <input 
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={handleVolumeChange}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-full h-1 bg-white/30 rounded-lg appearance-none cursor-pointer accent-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div 
+                className="bg-[#1f1f1f]" 
+                style={{ 
+                  aspectRatio, 
+                  width: "100%",
+                  maxHeight: isWide ? "60vh" : "calc(100vh - 20px)", 
+                }} 
+              />
+            )}
+            
+            {/* Interaction Sidebar (Overlay for Mobile) */}
+            <div className="absolute right-2 bottom-20 lg:hidden flex flex-col items-center gap-4 z-40">
+               <div className="relative mb-2">
+                <div className="w-11 h-11 rounded-full border border-white/20 overflow-hidden cursor-pointer shadow-lg">
+                  <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+                </div>
+                <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-brand flex items-center justify-center text-white border-2 border-background">
+                  <Plus className="w-2.5 h-2.5" />
+                </button>
+              </div>
+
+              <InteractionButton 
+                active={isLiked} 
+                activeColor="text-brand" 
+                icon={<Heart className={`w-7 h-7 ${isLiked ? "fill-brand" : ""}`} />} 
+                label={likes} 
+                onClick={() => setIsLiked(!isLiked)} 
+                isOverlay
+              />
+
+              <InteractionButton 
+                icon={<MessageCircle className="w-7 h-7" />} 
+                label={comments} 
+                isOverlay
+              />
+
+              <InteractionButton 
+                active={isSaved} 
+                activeColor="text-yellow-400" 
+                icon={<Bookmark className={`w-7 h-7 ${isSaved ? "fill-yellow-400" : ""}`} />} 
+                label={saves} 
+                onClick={() => setIsSaved(!isSaved)} 
+                isOverlay
+              />
+
+              <InteractionButton 
+                icon={<Share2 className="w-7 h-7" />} 
+                label={shares} 
+                isOverlay
+              />
             </div>
-          ))}
+
+            {/* Spinning Record Icon (Inside Video) */}
+            <div className="absolute bottom-4 right-4 z-20 lg:block hidden">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 border-[8px] border-gray-800 flex items-center justify-center animate-spin-slow">
+                <div className="w-4 h-4 rounded-full bg-gray-700 border border-gray-600" />
+              </div>
+            </div>
+
+            {/* Progress Bar (At bottom of video) */}
+            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/20 z-30">
+              <div className="h-full bg-white w-1/3 relative" />
+            </div>
+
+            {/* Info Area (Inside Video) */}
+            <div className="absolute bottom-4 lg:bottom-6 left-3 lg:left-4 right-12 z-20 text-white select-none">
+              <h3 className="font-bold text-[16px] lg:text-[17px] mb-1 hover:underline cursor-pointer inline-block pointer-events-auto">
+                {username}
+              </h3>
+              <p className="text-[14px] lg:text-[15px] line-clamp-2 leading-relaxed opacity-90 font-medium">
+                {caption}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="absolute left-4 bottom-4 text-white z-20">
-          <p className="font-bold text-[16px] hover:underline cursor-pointer">{username}</p>
-          <p className="text-[14px] mt-1 mb-1.5 flex items-center gap-1">
-            {caption} <Flame className="w-4 h-4 text-brand" />
-          </p>
-          <p className="text-[13px] text-text-secondary flex items-center gap-1">
-            <Music className="w-4 h-4" /> {sound}
-          </p>
+        {/* Interaction Sidebar (Desktop) */}
+        <div className="hidden lg:flex flex-col items-center gap-4 pb-12">
+          {/* Profile */}
+          <div className="relative mb-2">
+            <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden cursor-pointer">
+              <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
+            </div>
+            <button className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-brand flex items-center justify-center text-white hover:scale-110 transition-transform border-2 border-background">
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <InteractionButton 
+            active={isLiked} 
+            activeColor="text-brand" 
+            icon={<Heart className={`w-7 h-7 ${isLiked ? "fill-brand" : ""}`} />} 
+            label={likes} 
+            onClick={() => setIsLiked(!isLiked)} 
+          />
+
+          <InteractionButton 
+            icon={<MessageCircle className="w-7 h-7" />} 
+            label={comments} 
+          />
+
+          <InteractionButton 
+            active={isSaved} 
+            activeColor="text-yellow-400" 
+            icon={<Bookmark className={`w-7 h-7 ${isSaved ? "fill-yellow-400" : ""}`} />} 
+            label={saves} 
+            onClick={() => setIsSaved(!isSaved)} 
+          />
+
+          <InteractionButton 
+            icon={<Share2 className="w-7 h-7" />} 
+            label={shares} 
+          />
         </div>
       </div>
+    </div>
+  );
+}
+
+function InteractionButton({ icon, label, onClick, active, activeColor = "", isOverlay = false }: { 
+  icon: React.ReactNode; 
+  label: string; 
+  onClick?: () => void;
+  active?: boolean;
+  activeColor?: string;
+  isOverlay?: boolean;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <button 
+        onClick={onClick}
+        className={`w-11 lg:w-12 h-11 lg:h-12 rounded-full flex items-center justify-center transition-colors shadow-sm
+          ${isOverlay ? "bg-black/20 backdrop-blur-md" : "bg-white/10 hover:bg-white/20"} 
+          ${active ? activeColor : "text-white"}`}
+      >
+        {icon}
+      </button>
+      <span className={`text-[12px] font-bold ${isOverlay ? "text-white drop-shadow-md" : "text-white/80"}`}>{label}</span>
     </div>
   );
 }

@@ -27,8 +27,8 @@ public class AuthController{
 
     @PostMapping("/login")
     @RateLimit(limit = 10, durationInSeconds = 60)
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response){
-        AuthResponse result = authService.login(loginRequest, response).getAuthResponse();
+    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response, HttpServletRequest request){
+        AuthResponse result = authService.login(loginRequest, response, request).getAuthResponse();
 
         return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                 .message(Translator.toLocale("auth.login.success", "Login successful"))
@@ -99,10 +99,10 @@ public class AuthController{
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refresh(HttpServletRequest request){
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(HttpServletRequest request, HttpServletResponse response){
         return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
                 .message(Translator.toLocale("auth.refresh.success", "Token refreshed successfully"))
-                .data(authService.refreshToken(request))
+                .data(authService.refreshToken(request, response))
                 .status(HttpStatus.OK.value())
                 .timestamp(LocalDateTime.now())
                 .build());

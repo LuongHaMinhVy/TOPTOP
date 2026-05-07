@@ -5,28 +5,33 @@ import {
   Search,
   Users, Video, Clock, X, TrendingUp,
   Compass, MessageSquare, Bell, MoreHorizontal, Upload,
+  ChevronUp, ChevronDown, User
 } from "lucide-react";
 import Link from "next/link";
 import VideoCard from "../components/VideoCard";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/store/store";
-import { clearCredentials } from "@/store/authSlice";
+import { clearCredentials, openAuthModal } from "@/store/authSlice";
+import { authLogout } from "@/services/auth-api-service";
+import { useRouter } from "next/navigation";
 
 const FAKE_FOLLOWING = [
-  { name: "rivine", username: "@rivine7", color: "#FF6B6B" },
-  { name: "sagetaoist", username: "@sagetaoist", color: "#4ECDC4" },
-  { name: "cheems", username: "@algorithrm", color: "#45B7D1" },
+  { name: "Hải Ly Manga Review", username: "hailymangareview", color: "#FF6B6B" },
+  { name: "rivine", username: "rivine7", color: "#4ECDC4" },
+  { name: "sagetaoist", username: "sagetaoist", color: "#45B7D1" },
+  { name: "Tuệ Mẫn", username: "tueman", color: "#A29BFE" },
 ];
 
 export default function HomePage() {
+  const router = useRouter();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const user = useSelector((state: RootState) => state.auth.user);
-  const isLoggedIn = useSelector((state: RootState) => !!state.auth.accessToken);
+  const isLoggedIn = useSelector((state: RootState) => !!state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
   const [mounted, setMounted] = useState(false);
-useEffect(() => setMounted(true), []);
+  useEffect(() => setMounted(true), []);
 
   const openSearch = () => {
     setSearchOpen(true);
@@ -56,33 +61,51 @@ useEffect(() => setMounted(true), []);
         </div>
         <div className="flex-1 flex items-center bg-elevated rounded-full h-[36px] px-3 gap-2">
           <Search className="w-4 h-4 text-text-muted flex-shrink-0" />
-          <input type="text" placeholder="Search" className="bg-transparent flex-1 text-text-primary placeholder:text-text-muted text-[14px] focus:outline-none h-full min-w-0" />
+          <input type="text" placeholder="Tìm kiếm" className="bg-transparent flex-1 text-text-primary placeholder:text-text-muted text-[14px] focus:outline-none h-full min-w-0" />
         </div>
         {mounted && isLoggedIn && user ? (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-elevated flex items-center justify-center">
-              {user.avatarUrl
-                ? <img src={user.avatarUrl} alt={user.nickname ?? ""} className="w-full h-full object-cover" />
-                : <span className="text-[13px] font-bold">{(user.nickname ?? user.username ?? "U")[0].toUpperCase()}</span>
-              }
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-elevated flex items-center justify-center border border-elevated">
+                {user.avatarUrl
+                  ? <img src={user.avatarUrl} alt={user.nickname ?? ""} className="w-full h-full object-cover" />
+                  : <span className="text-[13px] font-bold">{(user.nickname ?? user.username ?? "U")[0].toUpperCase()}</span>
+                }
+              </div>
+              <span className="text-[14px] font-semibold truncate max-w-[80px]">{user.nickname ?? user.username}</span>
             </div>
-            <span className="text-[14px] font-semibold">{user.nickname ?? user.username}</span>
+            <button 
+              onClick={async () => {
+                await authLogout();
+                dispatch(clearCredentials());
+              }}
+              className="text-[12px] font-bold text-brand"
+            >
+              Logout
+            </button>
           </div>
         ) : (
-          <Link href="/login">
-            <button className="btn-primary" style={{ height: 30, fontSize: 13, minWidth: 64, padding: "0 12px" }}>Log in</button>
-          </Link>
+          <button 
+            onClick={() => dispatch(openAuthModal("login"))}
+            className="btn-primary" 
+            style={{ height: 30, fontSize: 13, minWidth: 64, padding: "0 12px" }}
+          >
+            Log in
+          </button>
         )}
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-
         <aside
           className="hidden lg:flex flex-col flex-shrink-0 border-r border-elevated bg-background overflow-hidden"
           style={{ width: collapsed ? 72 : 240, transition: "width 300ms cubic-bezier(0.4,0,0.2,1)" }}
         >
           <div className="flex items-center px-[18px] pt-5 pb-4 flex-shrink-0">
-            <div className="w-8 h-8 rounded-[4px] bg-gradient-to-tr from-brand to-cyan flex items-center justify-center font-bold text-white text-lg flex-shrink-0">t</div>
+            <div className="w-14 h-14 rounded-[8px] flex items-center justify-center shadow-lg relative overflow-hidden group">
+            <span className="text-white font-extrabold text-3xl italic tracking-tighter absolute z-10">t</span>
+            <span className="text-[#25F4EE] font-extrabold text-3xl italic tracking-tighter absolute z-0 -translate-x-[2px] -translate-y-[2px]">t</span>
+            <span className="text-[#FE2C55] font-extrabold text-3xl italic tracking-tighter absolute z-0 translate-x-[2px] translate-y-[2px]">t</span>
+          </div>
             <span className="text-xl font-bold tracking-tight whitespace-nowrap" style={labelStyle(collapsed, 180, 12)}>TopTop</span>
           </div>
 
@@ -93,20 +116,21 @@ useEffect(() => setMounted(true), []);
               style={{ height: 40, paddingLeft: collapsed ? 0 : 14, paddingRight: collapsed ? 0 : 14, justifyContent: collapsed ? "center" : "flex-start" }}
             >
               <Search className="w-[18px] h-[18px] text-text-secondary group-hover:text-text-primary flex-shrink-0" />
-              <span className="text-[15px] text-text-secondary whitespace-nowrap" style={labelStyle(collapsed, 150, 2)}>Search</span>
+              <span className="text-[15px] text-text-secondary whitespace-nowrap" style={labelStyle(collapsed, 150, 2)}>Tìm kiếm</span>
             </button>
           </div>
 
           <div className="flex-1 overflow-y-auto flex flex-col">
             <nav className="flex flex-col gap-0.5 px-2">
-              <TikNavItem icon={<HomeIcon />} label={'for you'} active collapsed={collapsed} />
-              <TikNavItem icon={<Compass className="w-8 h-8" />} label={'explore'} collapsed={collapsed} />
-              <TikNavItem icon={<Users className="w-8 h-8" />} label={'following'} collapsed={collapsed} />
-              <TikNavItem icon={<Users className="w-8 h-8" />} label={'friends'} collapsed={collapsed} />
-              <TikNavItem icon={<Video className="w-8 h-8" />} label={'live'} collapsed={collapsed} />
-              <TikNavItem icon={<MessageSquare className="w-8 h-8" />} label={'messages'} collapsed={collapsed} />
-              <TikNavItem icon={<Bell className="w-8 h-8" />} label={'activity'} collapsed={collapsed} />
-              <TikNavItem icon={<Upload className="w-8 h-8" />} label={'upload'} collapsed={collapsed} />
+              <TikNavItem icon={<HomeIcon />} label={'Đề xuất'} active collapsed={collapsed} />
+              <TikNavItem icon={<Compass className="w-8 h-8" />} label={'Khám phá'} collapsed={collapsed} />
+              <TikNavItem icon={<Users className="w-8 h-8" />} label={'Đã follow'} collapsed={collapsed} />
+              <TikNavItem icon={<Users className="w-8 h-8" />} label={'Bạn bè'} collapsed={collapsed} />
+              <TikNavItem icon={<Video className="w-8 h-8" />} label={'LIVE'} collapsed={collapsed} />
+              <TikNavItem icon={<MessageSquare className="w-8 h-8" />} label={'Tin nhắn'} collapsed={collapsed} />
+              <TikNavItem icon={<Bell className="w-8 h-8" />} label={'Hoạt động'} collapsed={collapsed} />
+              <TikNavItem icon={<Upload className="w-8 h-8" />} label={'Tải lên'} collapsed={collapsed} />
+              <TikNavItem icon={<User className="w-8 h-8" />} label={'Hồ sơ'} collapsed={collapsed} />
             </nav>
 
             <div
@@ -118,7 +142,7 @@ useEffect(() => setMounted(true), []);
                 pointerEvents: collapsed ? "none" : "auto",
               }}
             >
-              <p className="text-text-muted text-[13px] font-medium px-4 py-3">Accounts you follow</p>
+              <p className="text-text-muted text-[13px] font-medium px-4 py-3">Các tài khoản Đã follow</p>
               <ul className="flex flex-col gap-0.5 px-2">
                 {FAKE_FOLLOWING.map(u => (
                   <li key={u.username}>
@@ -146,9 +170,12 @@ useEffect(() => setMounted(true), []);
               {!mounted || !isLoggedIn && (
                 <div className="mx-4 mt-4 mb-3 border-t border-elevated pt-4">
                   <p className="text-text-secondary text-[13px] mb-3 leading-relaxed">Log in to follow creators, like videos, and view comments.</p>
-                  <Link href="/login" className="block">
-                    <button className="btn-secondary w-full">Log in</button>
-                  </Link>
+                  <button 
+                    onClick={() => dispatch(openAuthModal("login"))}
+                    className="btn-secondary w-full"
+                  >
+                    Log in
+                  </button>
                 </div>
               )}
 
@@ -232,7 +259,10 @@ useEffect(() => setMounted(true), []);
                 </div>
                 <div className="w-[1px] h-4 bg-elevated mx-1" />
                 <button 
-                  onClick={() => dispatch(clearCredentials())}
+                  onClick={async () => {
+                    await authLogout();
+                    dispatch(clearCredentials());
+                  }}
                   className="text-[14px] font-medium text-text-muted hover:text-brand transition-colors"
                 >
                   Logout
@@ -240,11 +270,13 @@ useEffect(() => setMounted(true), []);
               </div>
             ) : (
               <>
-                <Link href="/login">
-                  <button className="btn-primary" style={{ height: 32, fontSize: 14, minWidth: 80, padding: "0 16px" }}>
-                    Log in
-                  </button>
-                </Link>
+                <button 
+                  onClick={() => dispatch(openAuthModal("login"))}
+                  className="btn-primary" 
+                  style={{ height: 32, fontSize: 14, minWidth: 80, padding: "0 16px" }}
+                >
+                  Log in
+                </button>
                 <button className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-hover transition-colors text-text-muted hover:text-text-primary">
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
@@ -261,12 +293,41 @@ useEffect(() => setMounted(true), []);
             } as React.CSSProperties}
           >
             {[
-              { index: 0, aspectRatio: "9/16" },
-              { index: 1, aspectRatio: "16/9" },
-              { index: 2, aspectRatio: "1/1" },
+              { 
+                index: 0, 
+                videoUrl: "/sech.mp4",
+                aspectRatio: "9/16",
+                username: "juxtweb",
+                caption: "EVIL AURAA COME OUT! #webtoon #manhwa #webtoonrecomendation #manhwarecomendation",
+                likes: "8676",
+                comments: "52",
+                saves: "2122",
+                shares: "113"
+              },
+              { 
+                index: 1, 
+                videoUrl: "/snaptik.vn_jok61.mp4",
+                aspectRatio: "9/16",
+                username: "baprang4k", 
+                caption: "This is a vertical video test. 📱 #vertical #toptop",
+                likes: "12.5K",
+                comments: "431",
+                saves: "5000",
+                shares: "120"
+              }
             ].map((v) => (
-              <VideoCard key={v.index} index={v.index} aspectRatio={v.aspectRatio} videoLabel="Video" clickLoginLabel="Log in to interact" />
+              <VideoCard key={v.index} {...v} />
             ))}
+          </div>
+
+          {/* Navigation Arrows */}
+          <div className="absolute right-5 bottom-32 flex flex-col gap-2 z-40 hidden xl:flex">
+            <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+              <ChevronUp className="w-6 h-6 text-white" />
+            </button>
+            <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+              <ChevronDown className="w-6 h-6 text-white" />
+            </button>
           </div>
         </main>
       </div>

@@ -57,7 +57,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String stateKey = oAuth2StateCache.store(authResponse);
 
         cookieService.add(response, "refreshToken", refreshToken,
-                (int)(refreshTokenExpiration / 1000));
+                (int)(refreshTokenExpiration / 1000), request);
 
         String redirectUrl = frontendUrl + "/oauth2/callback?state=" + stateKey;
         log.info("OAuth2 login success for: {}", email);

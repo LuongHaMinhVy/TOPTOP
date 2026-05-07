@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import StoreProvider from "@/store/StoreProvider";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import QueryProvider from "@/components/QueryProvider";
+import AuthWrapper from "@/components/AuthWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +14,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-
-const queryClient = new QueryClient()
 
 export const metadata: Metadata = {
   title: {
@@ -37,9 +35,13 @@ export default function LocaleLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-hidden`}
     >
       <body className="min-h-full flex flex-col overflow-hidden">
-        <StoreProvider>
-          {children}
-        </StoreProvider>
+        <QueryProvider>
+          <StoreProvider>
+            <AuthWrapper>
+            {children}
+            </AuthWrapper>
+          </StoreProvider>
+        </QueryProvider>
       </body>
     </html>
   );
