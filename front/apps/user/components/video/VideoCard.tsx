@@ -1,5 +1,9 @@
-import { Heart, MessageCircle, Share2, Bookmark, Music, Plus, Volume2, VolumeX, Play } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bookmark, Music, Plus, Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/store/store";
+import { setMuted, setVolume, toggleMuted } from "@/store/slices/mediaSlice";
+import { InteractionButton } from "./InteractionButton";
 
 interface VideoCardProps {
   index: number;
@@ -28,13 +32,17 @@ export default function VideoCard({
   saves = "2292",
   shares = "495",
 }: VideoCardProps) {
+  const dispatch = useDispatch();
+  const isMuted = useSelector((state: RootState) => state.media.isMuted);
+  const volume = useSelector((state: RootState) => state.media.volume);
+  
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
+  const [showControlIcon, setShowControlIcon] = useState(false);
+  const [iconType, setIconType] = useState<"play" | "pause">("play");
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
   const ratioParts = (aspectRatio || "9/16").split('/');
@@ -43,14 +51,17 @@ export default function VideoCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const isIntersectingRef = useRef(false);
 
+  const isPlayingRef = useRef(isPlaying);
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         videoRef.current?.pause();
-        setIsPlaying(false);
-      } else if (isIntersectingRef.current) {
+      } else if (isIntersectingRef.current && isPlayingRef.current) {
         videoRef.current?.play().catch(() => {});
-        setIsPlaying(true);
       }
     };
 
@@ -62,8 +73,12 @@ export default function VideoCard({
         if (entry.isIntersecting) {
           if (videoRef.current) {
             videoRef.current.currentTime = 0;
-            videoRef.current.play().catch(() => {});
-            setIsPlaying(true);
+            if (!document.hidden) {
+              videoRef.current.play().catch(() => {});
+              setIsPlaying(true);
+            } else {
+              setIsPlaying(true);
+            }
           }
         } else {
           videoRef.current?.pause();
@@ -85,12 +100,22 @@ export default function VideoCard({
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.pause();
+        setIconType("pause");
       } else {
         videoRef.current.play();
+        setIconType("play");
       }
       setIsPlaying(!isPlaying);
+      setShowControlIcon(true);
+      setTimeout(() => setShowControlIcon(false), 500);
     }
   };
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+    }
+  }, [volume]);
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -111,16 +136,15 @@ export default function VideoCard({
       const seekTime = (val / 100) * videoRef.current.duration;
       videoRef.current.currentTime = seekTime;
       setProgress(val);
-      setIsMuted(false); 
+      dispatch(setMuted(false)); 
     }
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
+    dispatch(setVolume(newVolume));
     if (videoRef.current) {
       videoRef.current.volume = newVolume;
-      setIsMuted(newVolume === 0); // Unmute if volume > 0
     }
   };
 
@@ -130,9 +154,7 @@ export default function VideoCard({
       style={{ scrollSnapAlign: "center", scrollSnapStop: "always" }}
     >
       <div className="flex flex-col lg:flex-row items-center lg:items-end gap-3 lg:gap-5 w-full lg:w-auto px-4 lg:px-0">
-        {/* Main Content (Video + Info below) */}
         <div className="flex flex-col w-full lg:w-auto items-center">
-          {/* Video Container */}
           <div 
             className="relative rounded-xl lg:rounded-lg overflow-hidden group shadow-2xl flex items-center justify-center bg-black"
             style={{ 
@@ -140,7 +162,6 @@ export default function VideoCard({
               maxWidth: "100%",
             }}
           >
-            {/* Video Content */}
             {videoUrl ? (
               <div className="relative w-full h-full flex items-center justify-center" onClick={togglePlay}>
                 <video 
@@ -158,16 +179,20 @@ export default function VideoCard({
                   onLoadedMetadata={handleLoadedMetadata}
                 />
                 
-                {/* Play/Pause Overlay */}
-                {!isPlaying && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
-                    <div className="w-16 h-16 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-sm">
+                {/* Control Icon Animation */}
+                <div 
+                  className={`absolute inset-0 flex items-center justify-center pointer-events-none z-50 transition-all duration-300 transform
+                    ${showControlIcon ? "opacity-100 scale-100" : "opacity-0 scale-150"}`}
+                >
+                  <div className="w-16 h-16 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md">
+                    {iconType === "play" ? (
                       <Play className="w-10 h-10 text-white fill-white ml-1" />
-                    </div>
+                    ) : (
+                      <Pause className="w-10 h-10 text-white fill-white" />
+                    )}
                   </div>
-                )}
+                </div>
 
-                {/* Progress Bar (TikTok style) */}
                 <div className="absolute bottom-0 left-0 w-full h-4 group-hover:h-6 flex items-end cursor-pointer z-50" onClick={(e) => e.stopPropagation()}>
                   <div className="w-full h-1 group-hover:h-2 bg-white/20 transition-all relative">
                     <div 
@@ -188,7 +213,6 @@ export default function VideoCard({
                   </div>
                 </div>
 
-                {/* Volume Control */}
                 <div 
                   className="absolute top-4 right-4 z-50 flex items-center"
                   onMouseEnter={() => setShowVolumeSlider(true)}
@@ -197,8 +221,7 @@ export default function VideoCard({
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setIsMuted(!isMuted);
-                      if (isMuted && volume === 0) setVolume(0.5);
+                      dispatch(toggleMuted());
                     }}
                     className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/60 transition-colors z-10"
                   >
@@ -229,7 +252,6 @@ export default function VideoCard({
               />
             )}
             
-            {/* Interaction Sidebar (Overlay for Mobile) */}
             <div className="absolute right-2 bottom-20 lg:hidden flex flex-col items-center gap-4 z-40">
                <div className="relative mb-2">
                 <div className="w-11 h-11 rounded-full border border-white/20 overflow-hidden cursor-pointer shadow-lg">
@@ -271,19 +293,12 @@ export default function VideoCard({
               />
             </div>
 
-            {/* Spinning Record Icon (Inside Video) */}
             <div className="absolute bottom-4 right-4 z-20 lg:block hidden">
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-gray-800 to-gray-900 border-[8px] border-gray-800 flex items-center justify-center animate-spin-slow">
                 <div className="w-4 h-4 rounded-full bg-gray-700 border border-gray-600" />
               </div>
             </div>
 
-            {/* Progress Bar (At bottom of video) */}
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white/20 z-30">
-              <div className="h-full bg-white w-1/3 relative" />
-            </div>
-
-            {/* Info Area (Inside Video) */}
             <div className="absolute bottom-4 lg:bottom-6 left-3 lg:left-4 right-12 z-20 text-white select-none">
               <h3 className="font-bold text-[16px] lg:text-[17px] mb-1 hover:underline cursor-pointer inline-block pointer-events-auto">
                 {username}
@@ -295,9 +310,8 @@ export default function VideoCard({
           </div>
         </div>
 
-        {/* Interaction Sidebar (Desktop) */}
         <div className="hidden lg:flex flex-col items-center gap-4 pb-12">
-          {/* Profile */}
+
           <div className="relative mb-2">
             <div className="w-12 h-12 rounded-full border border-white/10 overflow-hidden cursor-pointer">
               <img src={avatarUrl} alt={username} className="w-full h-full object-cover" />
@@ -334,29 +348,6 @@ export default function VideoCard({
           />
         </div>
       </div>
-    </div>
-  );
-}
-
-function InteractionButton({ icon, label, onClick, active, activeColor = "", isOverlay = false }: { 
-  icon: React.ReactNode; 
-  label: string; 
-  onClick?: () => void;
-  active?: boolean;
-  activeColor?: string;
-  isOverlay?: boolean;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <button 
-        onClick={onClick}
-        className={`w-11 lg:w-12 h-11 lg:h-12 rounded-full flex items-center justify-center transition-colors shadow-sm
-          ${isOverlay ? "bg-black/20 backdrop-blur-md" : "bg-white/10 hover:bg-white/20"} 
-          ${active ? activeColor : "text-white"}`}
-      >
-        {icon}
-      </button>
-      <span className={`text-[12px] font-bold ${isOverlay ? "text-white drop-shadow-md" : "text-white/80"}`}>{label}</span>
     </div>
   );
 }

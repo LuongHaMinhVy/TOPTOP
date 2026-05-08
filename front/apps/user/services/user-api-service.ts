@@ -1,8 +1,8 @@
 import { AxiosError } from "axios";
 import api from "@/utils/axios-instance";
 import { handleErrorResponse } from "./handle-error-response";
-import type { ApiResponse } from "@/utils/common/index";
-import type { UserInfo } from "@/utils/response/user-info";
+import type { ApiResponse } from "@/types/api";
+import type { UserInfo } from "@/types/user";
 
 export const getCurrentUser = async (): Promise<ApiResponse<UserInfo>> => {
   try {

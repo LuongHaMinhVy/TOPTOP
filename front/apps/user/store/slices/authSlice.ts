@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { AuthResponse } from "@/utils/response/auth-response";
+import type { AuthResponse } from "@/types/auth";
+import type { UserInfo } from "@/types/user";
 
 interface AuthState extends AuthResponse {
   isAuthModalOpen: boolean;
@@ -16,8 +17,12 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setCredentials: (state, action: PayloadAction<AuthResponse>) => {
-      state.user = action.payload.user;
+    setCredentials: (state, action: PayloadAction<AuthResponse | UserInfo>) => {
+      if ('user' in action.payload && action.payload.user) {
+        state.user = action.payload.user;
+      } else if ('id' in action.payload || 'username' in action.payload) {
+        state.user = action.payload as UserInfo;
+      }
     },
     clearCredentials: (state) => {
       state.user = null;

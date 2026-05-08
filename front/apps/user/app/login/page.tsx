@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   QrCode, 
   User, 
@@ -13,17 +13,21 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authLogin } from "@/services/auth-api-service";
-import Facebook from "@/components/FaceBookIcon";
-import Google from "@/components/GoogleIcon";
+import Facebook from "@/components/shared/icons/FaceBookIcon";
+import Google from "@/components/shared/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/authSlice";
-import { useMutation } from "@tanstack/react-query";
+import { setCredentials } from "@/store/slices/authSlice";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLoginMutation, useOAuth } from "@/hooks/auth-hooks";
+import type { AuthMessageData, AuthResponse } from "@/types/auth";
+import type { ApiResponse } from "@/types/api";
 
 type AuthMethod = "options" | "phone_email";
 
 export default function LoginPage() {
   const router = useRouter();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [authMethod, setAuthMethod] = useState<AuthMethod>("options");
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -31,36 +35,53 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleFacebookLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/login/oauth2/code/facebook`;
-  };
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
 
-  const handleGoogleLogin = () => {
-    window.location.href = `${process.env.NEXT_PUBLIC_BACK_END_URL}/oauth2/authorization/google`;
-  };
+      const authEvent = event.data as AuthMessageData;
 
-  const loginMutation = useMutation({
-    mutationFn: authLogin,
-    onSuccess: (response) => {
-      setSuccessMsg(response.message || "Login successful");
-      if (response.data) {
-        dispatch(setCredentials(response.data));
+      if (authEvent.type === "AUTH_SUCCESS") {
+        const { data } = authEvent;
+        setSuccessMsg("Login successful");
+        if (data) dispatch(setCredentials(data));
+        // Small delay to ensure browser has processed cookies from the popup's last request
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        }, 300);
+        setTimeout(() => {
+          router.push("/");
+          router.refresh();
+        }, 1000);
+      } else if (authEvent.type === "AUTH_ERROR") {
+        setErrorMsg(authEvent.error || "Authentication failed");
       }
-      setTimeout(() => {
-        router.push("/");
-      }, 1000);
-    },
-    onError: (err: unknown) => {
-      const message = err instanceof Error ? err.message : "Failed to authenticate";
-      setErrorMsg(message);
-    }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [dispatch, router]);
+
+  const { openAuthPopup } = useOAuth();
+  const loginMutation = useLoginMutation(() => {
+    setSuccessMsg("Login successful");
+    setTimeout(() => {
+      router.push("/");
+    }, 1000);
   });
+
+  const handleFacebookLogin = () => openAuthPopup('facebook');
+  const handleGoogleLogin = () => openAuthPopup('google');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg("");
     setSuccessMsg("");
-    loginMutation.mutate({ email, password });
+    loginMutation.mutate({ email, password }, {
+      onError: (err: any) => {
+        setErrorMsg(err.message || "Failed to authenticate");
+      }
+    });
   };
 
   const renderOptions = () => (

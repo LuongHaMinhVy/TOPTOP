@@ -1,1 +1,1 @@
-export type { ApiResponse, ErrorResponse, Meta } from "@/utils/common/index";
+export type { ApiResponse, ErrorResponse, Meta } from "@/types/api";

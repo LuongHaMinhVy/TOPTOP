@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
-import { openAuthModal, closeAuthModal } from "@/store/authSlice";
+import { openAuthModal, closeAuthModal } from "@/store/slices/authSlice";
 
 export default function AuthWrapper({ children }: { children: React.ReactNode }) {
   const { isLoading } = useCurrentUser();

@@ -52,6 +52,22 @@ public class CookieServiceImpl implements CookieService {
     private String getCookieName(HttpServletRequest request, String name) {
         if ("JSESSIONID".equals(name)) return name;
         String appId = request.getHeader("X-App-Id");
+
+        if (appId == null || appId.isEmpty()) {
+            appId = request.getParameter("X-App-Id");
+        }
+
+        if (appId == null || appId.isEmpty()) {
+            if (request.getCookies() != null) {
+                for (Cookie cookie : request.getCookies()) {
+                    if ("X-App-Id".equals(cookie.getName())) {
+                        appId = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+        }
+
         return (appId != null && !appId.isEmpty())
                 ? name + "_" + appId
                 : name;

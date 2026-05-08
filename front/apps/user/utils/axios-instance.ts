@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const baseUrl = process.env.BACK_END_URL || "http://localhost:8080/api/v1";
+const baseUrl = process.env.NEXT_PUBLIC_BACK_END_URL 
+    ? `${process.env.NEXT_PUBLIC_BACK_END_URL}/api/v1` 
+    : "http://localhost:8080/api/v1";
 
 const api = axios.create({
     baseURL: baseUrl,
@@ -11,6 +13,7 @@ const api = axios.create({
         'X-App-Id': 'toptopuser',
     }
 })
+
 
 api.interceptors.response.use(
     (response) => response,

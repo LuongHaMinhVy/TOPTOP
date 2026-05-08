@@ -4,8 +4,9 @@ import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/authSlice";
+import { setCredentials } from "@/store/slices/authSlice";
 import { useOAuth2Exchange } from "@/hooks/useOAuth2Exchange";
+import { AuthResponse } from "@/types/auth";
 
 function CallbackContent() {
   const router = useRouter();
@@ -17,17 +18,36 @@ function CallbackContent() {
 
   useEffect(() => {
     if (!state) {
-      router.replace("/login?error=missing_state");
+      if (window.opener) {
+        window.opener.postMessage({ type: "AUTH_ERROR", error: "missing_state" }, window.location.origin);
+        window.close();
+      } else {
+        router.replace("/login?error=missing_state");
+      }
       return;
     }
 
     if (isSuccess && data) {
-      dispatch(setCredentials(data));
-      router.replace("/");
+      const authData: AuthResponse = (data.data && 'user' in data.data) 
+        ? data.data 
+        : (data as unknown as AuthResponse);
+
+      if (window.opener) {
+        window.opener.postMessage({ type: "AUTH_SUCCESS", data: authData }, window.location.origin);
+        setTimeout(() => window.close(), 500);
+      } else {
+        dispatch(setCredentials(authData));
+        router.replace("/");
+      }
     }
 
     if (isError) {
-      router.replace("/login?error=oauth2_failed");
+      if (window.opener) {
+        window.opener.postMessage({ type: "AUTH_ERROR", error: "oauth2_failed" }, window.location.origin);
+        setTimeout(() => window.close(), 500);
+      } else {
+        router.replace("/login?error=oauth2_failed");
+      }
     }
   }, [state, isSuccess, isError, data, router, dispatch]);
 

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getCurrentUser } from "@/services/user-api-service";
-import { setCredentials, clearCredentials } from "@/store/authSlice";
+import { setCredentials, clearCredentials } from "@/store/slices/authSlice";
 import { useEffect } from "react";
 import type { AppDispatch } from "@/store/store";
 import { useDispatch } from "react-redux";

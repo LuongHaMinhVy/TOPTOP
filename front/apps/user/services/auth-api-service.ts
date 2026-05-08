@@ -1,8 +1,8 @@
 import { AxiosError } from "axios";
 import api from "@/utils/axios-instance";
 import { handleErrorResponse } from "./handle-error-response";
-import type { LoginRequest, RegisterRequest, ResetPasswordRequest } from "@/utils/request/auth-request";
-import type { ApiResponse, AuthResponse } from "@/utils/response/auth-response";
+import type { LoginRequest, RegisterRequest, ResetPasswordRequest, AuthResponse } from "@/types/auth";
+import type { ApiResponse } from "@/types/api";
 
 export const authLogin = async (
   payload: LoginRequest

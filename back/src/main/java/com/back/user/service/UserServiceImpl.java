@@ -38,10 +38,16 @@ public class UserServiceImpl implements IUserService{
             email = authentication.getName();
         }
 
-        if (email == null) {
+        if (email == null || email.equals("anonymousUser")) {
             throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
         }
 
+        return getCachedUserInfo(email);
+    }
+
+    @org.springframework.cache.annotation.Cacheable(value = "userInfo", key = "#email")
+    public UserInfo getCachedUserInfo(String email) {
+        log.info("Fetching UserInfo from DB for: {}", email);
         User user = userRepo.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.EMAIL_NOT_FOUND));
 

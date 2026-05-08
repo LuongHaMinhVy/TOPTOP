@@ -10,25 +10,19 @@ import {
   EyeOff
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { authLogin, authRegister } from "@/services/auth-api-service";
-import Facebook from "@/components/FaceBookIcon";
-import Google from "@/components/GoogleIcon";
+import Facebook from "@/components/shared/icons/FaceBookIcon";
+import Google from "@/components/shared/icons/GoogleIcon";
 import { useDispatch } from "react-redux";
-import { setCredentials } from "@/store/authSlice";
-import { useMutation } from "@tanstack/react-query";
-
-type AuthType = "login" | "signup";
-type AuthMethod = "options" | "form";
-
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  initialType?: AuthType;
-}
+import { setCredentials } from "@/store/slices/authSlice";
+import { useQueryClient } from "@tanstack/react-query";
+import { useLoginMutation, useRegisterMutation, useOAuth } from "@/hooks/auth-hooks";
+import type { AuthType, AuthMethod, AuthModalProps, AuthMessageData } from "@/types/auth";
+import type { InputProps } from "@/types/ui";
 
 export default function AuthModal({ isOpen, onClose, initialType = "login" }: AuthModalProps) {
   const router = useRouter();
   const dispatch = useDispatch();
+  const queryClient = useQueryClient();
   const [type, setType] = useState<AuthType>(initialType);
   const [method, setMethod] = useState<AuthMethod>("options");
   
@@ -41,6 +35,30 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      const authEvent = event.data as AuthMessageData;
+      if (authEvent.type === "AUTH_SUCCESS") {
+        const { data } = authEvent;
+        setSuccessMsg("Login successful");
+        if (data) dispatch(setCredentials(data));
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+        }, 300);
+        setTimeout(() => {
+          onClose();
+          router.refresh();
+        }, 1000);
+      } else if (event.data?.type === "AUTH_ERROR") {
+        setErrorMsg(event.data.error || "Authentication failed");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [dispatch, onClose, router]);
 
   useEffect(() => {
     if (isOpen) {
@@ -63,23 +81,20 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
     setShowPassword(false);
   };
 
-  const handleOAuth = (provider: 'google' | 'facebook') => {
-    const urls = {
-      google: `${process.env.NEXT_PUBLIC_BACK_END_URL}/oauth2/authorization/google`,
-      facebook: `${process.env.NEXT_PUBLIC_BACK_END_URL}/login/oauth2/code/facebook`
-    };
-    window.location.href = urls[provider];
-  };
-
-  const loginMutation = useMutation({
-    mutationFn: authLogin,
-    onSuccess: (response) => {
-      setSuccessMsg(response.message || "Login successful");
-      if (response.data) dispatch(setCredentials(response.data));
-      setTimeout(() => { onClose(); router.refresh(); }, 1000);
-    },
-    onError: (err: any) => setErrorMsg(err.message || "Failed to authenticate")
+  const { openAuthPopup } = useOAuth();
+  const loginMutation = useLoginMutation(() => {
+    setSuccessMsg("Login successful");
+    setTimeout(() => { onClose(); router.refresh(); }, 1000);
   });
+
+  const registerMutation = useRegisterMutation(() => {
+    setSuccessMsg("Registration successful");
+    setTimeout(() => { setType("login"); setMethod("form"); }, 1500);
+  });
+
+  const handleOAuth = (provider: 'google' | 'facebook') => {
+    openAuthPopup(provider);
+  };
 
   const validateSignup = () => {
     const { username, email, password, dateOfBirth } = formData;
@@ -99,15 +114,13 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
     if (type === "signup") {
       const err = validateSignup();
       if (err) return setErrorMsg(err);
-      try {
-        const response = await authRegister(formData);
-        setSuccessMsg(response.message || "Registration successful");
-        setTimeout(() => { setType("login"); setMethod("form"); }, 1500);
-      } catch (err: any) {
-        setErrorMsg(err.message || "Registration failed");
-      }
+      registerMutation.mutate(formData, {
+        onError: (err: any) => setErrorMsg(err.message || "Registration failed")
+      });
     } else {
-      loginMutation.mutate({ email: formData.email, password: formData.password });
+      loginMutation.mutate({ email: formData.email, password: formData.password }, {
+        onError: (err: any) => setErrorMsg(err.message || "Failed to authenticate")
+      });
     }
   };
 
@@ -151,11 +164,11 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
               <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                 {type === "signup" && (
                   <>
-                    <Input label="Username" placeholder="Username" value={formData.username} onChange={v => setFormData({...formData, username: v})} />
-                    <Input label="Birthday" type="date" value={formData.dateOfBirth} onChange={v => setFormData({...formData, dateOfBirth: v})} />
+                    <Input label="Username" placeholder="Username" value={formData.username} onChange={(v: string) => setFormData({...formData, username: v})} />
+                    <Input label="Birthday" type="date" value={formData.dateOfBirth} onChange={(v: string) => setFormData({...formData, dateOfBirth: v})} />
                   </>
                 )}
-                <Input label="Email" type="email" placeholder="Email address" value={formData.email} onChange={v => setFormData({...formData, email: v})} />
+                <Input label="Email" type="email" placeholder="Email address" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
                 <div className="relative">
                   <Input 
                     label="Password" 
@@ -205,7 +218,7 @@ function OptionBtn({ icon, text, onClick }: { icon: React.ReactNode, text: strin
   );
 }
 
-function Input({ label, value, onChange, ...props }: any) {
+function Input({ label, value, onChange, ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-[14px] font-semibold text-white ml-1">{label}</label>
@@ -213,7 +226,7 @@ function Input({ label, value, onChange, ...props }: any) {
         {...props}
         className="w-full bg-[#2f2f2f] border-none rounded-sm px-4 py-3 text-white placeholder:text-gray-500 focus:ring-1 focus:ring-white/20 outline-none"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
       />
     </div>
   );
