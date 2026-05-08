@@ -4,6 +4,10 @@ import "./globals.css";
 import StoreProvider from "@/components/providers/StoreProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import AuthWrapper from "@/components/auth/AuthWrapper";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { notFound } from "next/navigation";
+import { routing } from "@/i18n/routing";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,26 +27,38 @@ export const metadata: Metadata = {
   description: "A TikTok clone application",
 };
 
-export default function LocaleLayout({
-  children
+export default async function LocaleLayout({
+  children,
+  params
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+
+  if (!routing.locales.includes(locale as any)) {
+    notFound();
+  }
+
+  const messages = await getMessages();
 
   return (
     <html
-      lang='en'
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased overflow-hidden`}
     >
       <body className="min-h-full flex flex-col overflow-hidden">
-        <QueryProvider>
-          <StoreProvider>
-            <AuthWrapper>
-            {children}
-            </AuthWrapper>
-          </StoreProvider>
-        </QueryProvider>
+        <NextIntlClientProvider messages={messages}>
+          <QueryProvider>
+            <StoreProvider>
+              <AuthWrapper>
+                {children}
+              </AuthWrapper>
+            </StoreProvider>
+          </QueryProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
 }
+

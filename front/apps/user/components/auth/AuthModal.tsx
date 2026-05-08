@@ -42,7 +42,7 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
       const authEvent = event.data as AuthMessageData;
       if (authEvent.type === "AUTH_SUCCESS") {
         const { data } = authEvent;
-        setSuccessMsg("Login successful");
+        setSuccessMsg("Đăng nhập thành công");
         if (data) dispatch(setCredentials(data));
         setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ["currentUser"] });
@@ -52,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
           router.refresh();
         }, 1000);
       } else if (event.data?.type === "AUTH_ERROR") {
-        setErrorMsg(event.data.error || "Authentication failed");
+        setErrorMsg(event.data.error || "Xác thực thất bại");
       }
     };
 
@@ -83,12 +83,12 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
 
   const { openAuthPopup } = useOAuth();
   const loginMutation = useLoginMutation(() => {
-    setSuccessMsg("Login successful");
+    setSuccessMsg("Đăng nhập thành công");
     setTimeout(() => { onClose(); router.refresh(); }, 1000);
   });
 
   const registerMutation = useRegisterMutation(() => {
-    setSuccessMsg("Registration successful");
+    setSuccessMsg("Đăng ký thành công");
     setTimeout(() => { setType("login"); setMethod("form"); }, 1500);
   });
 
@@ -98,11 +98,11 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
 
   const validateSignup = () => {
     const { username, email, password, dateOfBirth } = formData;
-    if (username.length < 2 || username.length > 24) return "Username must be 2-24 characters.";
-    if (!/^[a-zA-Z0-9._]+$/.test(username)) return "Invalid username characters.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Invalid email format.";
-    if (password.length < 8) return "Password must be at least 8 characters.";
-    if (!dateOfBirth) return "Date of birth is required.";
+    if (username.length < 2 || username.length > 24) return "Tên người dùng phải từ 2-24 ký tự.";
+    if (!/^[a-zA-Z0-9._]+$/.test(username)) return "Tên người dùng chứa ký tự không hợp lệ.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "Định dạng email không hợp lệ.";
+    if (password.length < 8) return "Mật khẩu phải có ít nhất 8 ký tự.";
+    if (!dateOfBirth) return "Vui lòng nhập ngày sinh.";
     return null;
   };
 
@@ -115,11 +115,11 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
       const err = validateSignup();
       if (err) return setErrorMsg(err);
       registerMutation.mutate(formData, {
-        onError: (err: any) => setErrorMsg(err.message || "Registration failed")
+        onError: (err: any) => setErrorMsg(err.message || "Đăng ký thất bại")
       });
     } else {
       loginMutation.mutate({ email: formData.email, password: formData.password }, {
-        onError: (err: any) => setErrorMsg(err.message || "Failed to authenticate")
+        onError: (err: any) => setErrorMsg(err.message || "Xác thực thất bại")
       });
     }
   };
@@ -139,19 +139,19 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
           {method === "options" ? (
             <div className="flex flex-col gap-6">
               <h2 className="text-[32px] font-bold text-center text-white">
-                {type === "login" ? "Log in to TopTop" : "Sign up for TopTop"}
+                {type === "login" ? "Đăng nhập vào TopTop" : "Đăng ký TopTop"}
               </h2>
               <div className="flex flex-col gap-3">
-                <OptionBtn icon={<User className="w-5 h-5" />} text="Use email" onClick={() => setMethod("form")} />
-                <OptionBtn icon={<Google className="w-5 h-5" />} text="Continue with Google" onClick={() => handleOAuth('google')} />
-                <OptionBtn icon={<Facebook className="w-5 h-5" />} text="Continue with Facebook" onClick={() => handleOAuth('facebook')} />
+                <OptionBtn icon={<User className="w-5 h-5" />} text="Sử dụng email" onClick={() => setMethod("form")} />
+                <OptionBtn icon={<Google className="w-5 h-5" />} text="Tiếp tục với Google" onClick={() => handleOAuth('google')} />
+                <OptionBtn icon={<Facebook className="w-5 h-5" />} text="Tiếp tục với Facebook" onClick={() => handleOAuth('facebook')} />
               </div>
             </div>
           ) : (
             <div className="flex flex-col">
               <div className="flex items-center mb-8">
                 <button onClick={() => setMethod("options")} className="p-2 -ml-2 rounded-full hover:bg-white/10 text-white"><ChevronLeft className="w-6 h-6" /></button>
-                <h2 className="text-[24px] font-bold mx-auto text-white">{type === "login" ? "Log in" : "Sign up"}</h2>
+                <h2 className="text-[24px] font-bold mx-auto text-white">{type === "login" ? "Đăng nhập" : "Đăng ký"}</h2>
                 <div className="w-10" />
               </div>
 
@@ -164,16 +164,16 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
               <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                 {type === "signup" && (
                   <>
-                    <Input label="Username" placeholder="Username" value={formData.username} onChange={(v: string) => setFormData({...formData, username: v})} />
-                    <Input label="Birthday" type="date" value={formData.dateOfBirth} onChange={(v: string) => setFormData({...formData, dateOfBirth: v})} />
+                    <Input label="Tên người dùng" placeholder="Tên người dùng" value={formData.username} onChange={(v: string) => setFormData({...formData, username: v})} />
+                    <Input label="Ngày sinh" type="date" value={formData.dateOfBirth} onChange={(v: string) => setFormData({...formData, dateOfBirth: v})} />
                   </>
                 )}
-                <Input label="Email" type="email" placeholder="Email address" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
+                <Input label="Email" type="email" placeholder="Địa chỉ email" value={formData.email} onChange={(v: string) => setFormData({...formData, email: v})} />
                 <div className="relative">
                   <Input 
                     label="Password" 
                     type={showPassword ? "text" : "password"} 
-                    placeholder="Password" 
+                    placeholder="Mật khẩu" 
                     value={formData.password} 
                     onChange={v => setFormData({...formData, password: v})} 
                   />
@@ -182,11 +182,11 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
                   </button>
                 </div>
                 
-                {type === "login" && <button type="button" className="text-[13px] font-semibold text-gray-400 hover:underline text-left">Forgot password?</button>}
+                {type === "login" && <button type="button" className="text-[13px] font-semibold text-gray-400 hover:underline text-left">Quên mật khẩu?</button>}
                 
                 <button type="submit" disabled={loginMutation.isPending} className="w-full bg-[#fe2c55] hover:bg-[#ef2950] disabled:opacity-50 text-white font-bold py-3 rounded-sm mt-4 flex items-center justify-center gap-2">
                   {loginMutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-                  {type === "login" ? "Log in" : "Sign up"}
+                  {type === "login" ? "Đăng nhập" : "Đăng ký"}
                 </button>
               </form>
             </div>
@@ -195,12 +195,12 @@ export default function AuthModal({ isOpen, onClose, initialType = "login" }: Au
 
         <div className="bg-[#121212] border-t border-white/5 p-6 flex flex-col items-center gap-4">
           <p className="text-[12px] text-gray-500 text-center leading-tight max-w-[320px]">
-            By continuing, you agree to TopTop's <span className="text-white hover:underline cursor-pointer">Terms of Service</span> and <span className="text-white hover:underline cursor-pointer">Privacy Policy</span>.
+            Bằng cách tiếp tục, bạn đồng ý với <span className="text-white hover:underline cursor-pointer">Điều khoản Dịch vụ</span> và <span className="text-white hover:underline cursor-pointer">Chính sách Quyền riêng tư</span> của TopTop.
           </p>
           <div className="flex items-center gap-2 text-[15px]">
-            <span className="text-white">{type === "login" ? "Don't have an account?" : "Already have an account?"}</span>
+            <span className="text-white">{type === "login" ? "Bạn chưa có tài khoản?" : "Bạn đã có tài khoản?"}</span>
             <button onClick={() => { setType(type === "login" ? "signup" : "login"); setMethod("options"); resetForm(); }} className="text-[#fe2c55] font-bold hover:underline">
-              {type === "login" ? "Sign up" : "Log in"}
+              {type === "login" ? "Đăng ký" : "Đăng nhập"}
             </button>
           </div>
         </div>

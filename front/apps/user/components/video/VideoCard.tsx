@@ -156,14 +156,14 @@ export default function VideoCard({
       <div className="flex flex-col lg:flex-row items-center lg:items-end gap-3 lg:gap-5 w-full lg:w-auto px-4 lg:px-0">
         <div className="flex flex-col w-full lg:w-auto items-center">
           <div 
-            className="relative rounded-xl lg:rounded-lg overflow-hidden group shadow-2xl flex items-center justify-center bg-black"
+            className="relative rounded-xl lg:rounded-lg group shadow-2xl flex items-center justify-center bg-black"
             style={{ 
               maxHeight: isWide ? "60vh" : "calc(100vh - 20px)", 
               maxWidth: "100%",
             }}
           >
             {videoUrl ? (
-              <div className="relative w-full h-full flex items-center justify-center" onClick={togglePlay}>
+              <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl lg:rounded-lg" onClick={togglePlay}>
                 <video 
                   ref={videoRef}
                   src={videoUrl} 
@@ -193,28 +193,21 @@ export default function VideoCard({
                   </div>
                 </div>
 
-                <div className="absolute bottom-0 left-0 w-full h-4 group-hover:h-6 flex items-end cursor-pointer z-50" onClick={(e) => e.stopPropagation()}>
-                  <div className="w-full h-1 group-hover:h-2 bg-white/20 transition-all relative">
+                {/* Progress Bar TRACK (inside clipper) */}
+                <div className="absolute bottom-0 left-0 w-full h-1 group-hover:h-2 transition-all pointer-events-none z-40">
+                  <div className="w-full h-full bg-white/20">
                     <div 
-                      className="h-full bg-brand relative"
+                      className="h-full bg-brand transition-all duration-100"
                       style={{ width: `${progress}%` }}
-                    >
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-brand rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <input 
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={progress}
-                      onChange={handleSeek}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                     />
                   </div>
                 </div>
 
+                {/* Top Gradient Overlay for UI elements (visible on hover) */}
+                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/50 via-black/10 to-transparent pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
                 <div 
-                  className="absolute top-4 right-4 z-50 flex items-center"
+                  className="absolute top-4 left-4 z-50 flex items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                   onMouseEnter={() => setShowVolumeSlider(true)}
                   onMouseLeave={() => setShowVolumeSlider(false)}
                 >
@@ -243,7 +236,7 @@ export default function VideoCard({
               </div>
             ) : (
               <div 
-                className="bg-[#1f1f1f]" 
+                className="bg-[#1f1f1f] rounded-xl lg:rounded-lg" 
                 style={{ 
                   aspectRatio, 
                   width: "100%",
@@ -251,6 +244,27 @@ export default function VideoCard({
                 }} 
               />
             )}
+
+            <div 
+              className="absolute bottom-0 left-0 w-full h-4 hover:h-6 flex items-end z-50 group/progress" 
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-full h-1 group-hover/progress:h-2 transition-all relative">
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-[0_0_10px_rgba(255,255,255,0.5)] z-[60]"
+                  style={{ left: `calc(${progress}% - 8px)` }}
+                />
+                <input 
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={progress}
+                  onChange={handleSeek}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer [&::-webkit-slider-thumb]:cursor-grab [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:appearance-none active:[&::-webkit-slider-thumb]:cursor-grabbing z-[70]"
+                />
+              </div>
+            </div>
             
             <div className="absolute right-2 bottom-20 lg:hidden flex flex-col items-center gap-4 z-40">
                <div className="relative mb-2">
@@ -298,6 +312,8 @@ export default function VideoCard({
                 <div className="w-4 h-4 rounded-full bg-gray-700 border border-gray-600" />
               </div>
             </div>
+
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none z-10" />
 
             <div className="absolute bottom-4 lg:bottom-6 left-3 lg:left-4 right-12 z-20 text-white select-none">
               <h3 className="font-bold text-[16px] lg:text-[17px] mb-1 hover:underline cursor-pointer inline-block pointer-events-auto">

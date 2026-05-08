@@ -16,7 +16,7 @@ function VerifyEmailContent() {
   useEffect(() => {
     if (!token) {
       setStatus("error");
-      setMessage("No verification token provided.");
+      setMessage("Không tìm thấy mã xác thực.");
       return;
     }
 
@@ -26,7 +26,7 @@ function VerifyEmailContent() {
       .then((res) => {
         if (isMounted) {
           setStatus("success");
-          setMessage(res.message || "Email verified successfully!");
+          setMessage(res.message || "Xác thực email thành công!");
           setTimeout(() => {
             router.push("/");
           }, 3000);
@@ -35,7 +35,7 @@ function VerifyEmailContent() {
       .catch((err) => {
         if (isMounted) {
           setStatus("error");
-          setMessage(err instanceof Error ? err.message : "Failed to verify email");
+          setMessage(err instanceof Error ? err.message : "Xác thực email thất bại");
         }
       });
       
@@ -49,27 +49,27 @@ function VerifyEmailContent() {
       {status === "loading" && (
         <>
           <Loader2 className="w-12 h-12 text-brand animate-spin mb-4" />
-          <h2 className="text-[20px] font-bold text-text-primary mb-2">Verifying your email</h2>
-          <p className="text-[14px] text-text-secondary">Please wait a moment while we confirm your email address.</p>
+          <h2 className="text-[20px] font-bold text-text-primary mb-2">Đang xác thực email</h2>
+          <p className="text-[14px] text-text-secondary">Vui lòng chờ trong giây lát trong khi chúng tôi xác nhận địa chỉ email của bạn.</p>
         </>
       )}
 
       {status === "success" && (
         <>
           <CheckCircle className="w-12 h-12 text-[#12B76A] mb-4" />
-          <h2 className="text-[20px] font-bold text-text-primary mb-2">Verification Successful</h2>
+          <h2 className="text-[20px] font-bold text-text-primary mb-2">Xác thực thành công</h2>
           <p className="text-[14px] text-text-secondary mb-6">{message}</p>
-          <p className="text-[13px] text-text-muted">Redirecting to main page...</p>
+          <p className="text-[13px] text-text-muted">Đang chuyển hướng về trang chủ...</p>
         </>
       )}
 
       {status === "error" && (
         <>
           <XCircle className="w-12 h-12 text-[#F04438] mb-4" />
-          <h2 className="text-[20px] font-bold text-text-primary mb-2">Verification Failed</h2>
+          <h2 className="text-[20px] font-bold text-text-primary mb-2">Xác thực thất bại</h2>
           <p className="text-[14px] text-[#F04438] mb-6">{message}</p>
           <Link href="/login" className="w-full">
-            <button className="btn-primary w-full h-[44px]">Return to Login</button>
+            <button className="btn-primary w-full h-[44px]">Quay lại Đăng nhập</button>
           </Link>
         </>
       )}

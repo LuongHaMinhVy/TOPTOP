@@ -43,7 +43,7 @@ export default function LoginPage() {
 
       if (authEvent.type === "AUTH_SUCCESS") {
         const { data } = authEvent;
-        setSuccessMsg("Login successful");
+        setSuccessMsg("Đăng nhập thành công");
         if (data) dispatch(setCredentials(data));
         // Small delay to ensure browser has processed cookies from the popup's last request
         setTimeout(() => {
@@ -54,7 +54,7 @@ export default function LoginPage() {
           router.refresh();
         }, 1000);
       } else if (authEvent.type === "AUTH_ERROR") {
-        setErrorMsg(authEvent.error || "Authentication failed");
+        setErrorMsg(authEvent.error || "Xác thực thất bại");
       }
     };
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   const { openAuthPopup } = useOAuth();
   const loginMutation = useLoginMutation(() => {
-    setSuccessMsg("Login successful");
+    setSuccessMsg("Đăng nhập thành công");
     setTimeout(() => {
       router.push("/");
     }, 1000);
@@ -79,7 +79,7 @@ export default function LoginPage() {
     setSuccessMsg("");
     loginMutation.mutate({ email, password }, {
       onError: (err: any) => {
-        setErrorMsg(err.message || "Failed to authenticate");
+        setErrorMsg(err.message || "Xác thực thất bại");
       }
     });
   };
@@ -87,7 +87,7 @@ export default function LoginPage() {
   const renderOptions = () => (
     <div className="flex flex-col gap-4">
       <h2 className="text-[36px] font-bold text-center mb-6 text-text-primary">
-        Log in to TopTop
+        Đăng nhập vào TopTop
       </h2>
 
       <div className="flex flex-col gap-4">
@@ -100,7 +100,7 @@ export default function LoginPage() {
           className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
         >
           <User className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Use email</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Sử dụng email</span>
         </button>
 
         <button
@@ -108,7 +108,7 @@ export default function LoginPage() {
           className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
         >
           <Google className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Google</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Tiếp tục với Google</span>
         </button>
 
         <button
@@ -116,7 +116,7 @@ export default function LoginPage() {
           className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
         >
           <Facebook className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Facebook</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Tiếp tục với Facebook</span>
         </button>
       </div>
     </div>
@@ -131,12 +131,12 @@ export default function LoginPage() {
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
-        <h2 className="text-[28px] font-bold mx-auto text-text-primary">Log in</h2>
+        <h2 className="text-[28px] font-bold mx-auto text-text-primary">Đăng nhập</h2>
         <div className="w-10"></div>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <span className="font-semibold text-[16px] text-text-primary">Email / Username</span>
+        <span className="font-semibold text-[16px] text-text-primary">Email / Tên người dùng</span>
       </div>
 
       {errorMsg && (
@@ -155,7 +155,7 @@ export default function LoginPage() {
         <div className="flex flex-col gap-4">
           <input
             type="email"
-            placeholder="Email or username"
+            placeholder="Email hoặc tên người dùng"
             required
             className="input-field"
             value={email}
@@ -164,7 +164,7 @@ export default function LoginPage() {
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
+              placeholder="Mật khẩu"
               required
               className="input-field pr-10"
               value={password}
@@ -188,7 +188,7 @@ export default function LoginPage() {
           href="#"
           className="text-[14px] font-semibold text-text-secondary hover:underline hover:text-text-primary mt-2"
         >
-          Forgot password?
+          Quên mật khẩu?
         </Link>
 
         <button
@@ -197,7 +197,7 @@ export default function LoginPage() {
           disabled={loginMutation.isPending || !email || !password}
         >
           {loginMutation.isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-          Log in
+          Đăng nhập
         </button>
       </form>
     </div>
@@ -219,16 +219,16 @@ export default function LoginPage() {
 
         <div className="mt-8 pt-6 border-t border-elevated text-center">
           <p className="text-[12px] text-text-muted mb-6 leading-relaxed">
-            By continuing, you agree to our{" "}
-            <Link href="#" className="text-text-primary hover:underline">Terms of Service</Link>
-            {" "}and confirm that you have read our{" "}
-            <Link href="#" className="text-text-primary hover:underline">Privacy Policy</Link>.
+            Bằng cách tiếp tục, bạn đồng ý với{" "}
+            <Link href="#" className="text-text-primary hover:underline">Điều khoản Dịch vụ</Link>
+            {" "}và xác nhận rằng bạn đã đọc{" "}
+            <Link href="#" className="text-text-primary hover:underline">Chính sách Quyền riêng tư</Link> của chúng tôi.
           </p>
 
           <div className="flex items-center justify-center gap-2">
-            <span className="text-[15px] text-text-primary">Don't have an account?</span>
+            <span className="text-[15px] text-text-primary">Bạn chưa có tài khoản?</span>
             <Link href="/signup" className="text-brand font-bold text-[15px] hover:underline">
-              Sign up
+              Đăng ký
             </Link>
           </div>
         </div>

@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { authLogin } from "@/services/auth-api-service";
 import { Eye, EyeOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const t = useTranslations("Admin.login");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,15 +23,15 @@ export default function AdminLoginPage() {
       const isAdmin = roles.includes("ROLE_ADMIN");
 
       if (!isAdmin) {
-        setErrorMsg("Access denied. Admin privileges required.");
+        setErrorMsg(t("accessDenied"));
         return;
       }
 
       router.push("/dashboard");
     },
     onError: (err: any) => {
-      setErrorMsg(err.message || "An error occurred");
-    }
+      setErrorMsg(err.message || t("unknownError"));
+    },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -41,17 +44,17 @@ export default function AdminLoginPage() {
     <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
-          <div className="w-14 h-14 bg-black rounded-[8px] flex items-center justify-center shadow-lg relative overflow-hidden group">
-            <span className="text-white font-extrabold text-3xl italic tracking-tighter absolute z-10">t</span>
+          <div className="w-14 h-14 bg-black rounded-[8px] flex items-center justify-center shadow-lg relative overflow-hidden">
+            <span className="text-white  font-extrabold text-3xl italic tracking-tighter absolute z-10">t</span>
             <span className="text-[#25F4EE] font-extrabold text-3xl italic tracking-tighter absolute z-0 -translate-x-[2px] -translate-y-[2px]">t</span>
-            <span className="text-[#FE2C55] font-extrabold text-3xl italic tracking-tighter absolute z-0 translate-x-[2px] translate-y-[2px]">t</span>
+            <span className="text-[#FE2C55] font-extrabold text-3xl italic tracking-tighter absolute z-0  translate-x-[2px]  translate-y-[2px]">t</span>
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          TopTop Admin Center
+          {t("title")}
         </h2>
         <p className="mt-2 text-center text-sm text-gray-500 font-medium">
-          Manage creators, content, and platform safety
+          {t("subtitle")}
         </p>
       </div>
 
@@ -75,23 +78,21 @@ export default function AdminLoginPage() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Email address
+                {t("emailLabel")}
               </label>
-              <div>
-                <input
-                  type="email"
-                  required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent sm:text-sm transition-all bg-gray-50 focus:bg-white"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
-                />
-              </div>
+              <input
+                type="email"
+                required
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent sm:text-sm transition-all bg-gray-50 focus:bg-white"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t("emailPlaceholder")}
+              />
             </div>
 
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Password
+                {t("passwordLabel")}
               </label>
               <div className="relative">
                 <input
@@ -100,18 +101,14 @@ export default function AdminLoginPage() {
                   className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent sm:text-sm transition-all bg-gray-50 focus:bg-white"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder={t("passwordPlaceholder")}
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
             </div>
@@ -122,13 +119,13 @@ export default function AdminLoginPage() {
                 disabled={loginMutation.isPending}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-[8px] shadow-sm text-sm font-bold text-white bg-[#FE2C55] hover:bg-[#E6284D] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FE2C55] transition-all disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                {loginMutation.isPending ? (
+                {loginMutation.isPending && (
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                ) : null}
-                {loginMutation.isPending ? "Authenticating..." : "Log in to Admin Center"}
+                )}
+                {loginMutation.isPending ? t("submitting") : t("submit")}
               </button>
             </div>
           </form>

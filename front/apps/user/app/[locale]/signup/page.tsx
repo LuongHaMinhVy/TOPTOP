@@ -33,25 +33,25 @@ export default function SignupPage() {
 
   const validateForm = () => {
     if (username.length < 2 || username.length > 24) {
-      return "Username must be between 2 and 24 characters.";
+      return "Tên người dùng phải từ 2 đến 24 ký tự.";
     }
     if (!/^[a-zA-Z0-9._]+$/.test(username)) {
-      return "Username can only contain letters, numbers, dots, and underscores.";
+      return "Tên người dùng chỉ có thể chứa chữ cái, số, dấu chấm và dấu gạch dưới.";
     }
     
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return "Invalid email format.";
+      return "Định dạng email không hợp lệ.";
     }
 
     if (password.length < 8 || password.length > 20) {
-      return "Password must be between 8 and 20 characters.";
+      return "Mật khẩu phải từ 8 đến 20 ký tự.";
     }
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,20}$/.test(password)) {
-      return "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).";
+      return "Mật khẩu phải chứa ít nhất một chữ hoa, một chữ thường, một số và một ký tự đặc biệt (@$!%*?&#).";
     }
 
     if (!dateOfBirth) {
-      return "Date of birth is required.";
+      return "Vui lòng nhập ngày sinh.";
     }
 
     return null;
@@ -73,13 +73,13 @@ export default function SignupPage() {
     try {
       const response = await authRegister({ username, email, password, dateOfBirth });
 
-      setSuccessMsg(response.message || "Registration successful");
+      setSuccessMsg(response.message || "Đăng ký thành công");
       
       setTimeout(() => {
         router.push("/login");
       }, 2000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to authenticate";
+      const message = err instanceof Error ? err.message : "Xác thực thất bại";
       setErrorMsg(message);
     } finally {
       setIsLoading(false);
@@ -89,13 +89,13 @@ export default function SignupPage() {
   const renderOptions = () => (
     <div className="flex flex-col gap-4">
       <h2 className="text-[36px] font-bold text-center mb-6 text-text-primary">
-        Sign up for TopTop
+        Đăng ký TopTop
       </h2>
 
       <div className="flex flex-col gap-4">
         <button className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
           <QrCode className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Use QR code</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Sử dụng mã QR</span>
         </button>
 
         <button 
@@ -107,12 +107,12 @@ export default function SignupPage() {
           className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface"
         >
           <User className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Use phone / email / username</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Sử dụng điện thoại / email / tên người dùng</span>
         </button>
 
         <button className="flex items-center w-full p-3 border border-elevated rounded-[4px] hover:bg-[rgba(255,255,255,0.1)] transition-colors text-text-primary bg-surface">
           <Apple className="w-5 h-5 ml-2" />
-          <span className="flex-1 text-center font-semibold text-[16px]">Continue with Apple</span>
+          <span className="flex-1 text-center font-semibold text-[16px]">Tiếp tục với Apple</span>
         </button>
       </div>
     </div>
@@ -128,7 +128,7 @@ export default function SignupPage() {
           <ChevronLeft className="w-6 h-6" />
         </button>
         <h2 className="text-[28px] font-bold mx-auto text-text-primary">
-          Sign up
+          Đăng ký
         </h2>
         <div className="w-10"></div>
       </div>
@@ -150,7 +150,7 @@ export default function SignupPage() {
           
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Tên người dùng"
             required
             className="input-field"
             value={username}
@@ -169,7 +169,7 @@ export default function SignupPage() {
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Password"
+              placeholder="Mật khẩu"
               required
               className="input-field pr-10"
               value={password}
@@ -190,7 +190,7 @@ export default function SignupPage() {
 
           <input
             type="date"
-            placeholder="Date of birth"
+            placeholder="Ngày sinh"
             required
             className="input-field"
             value={dateOfBirth}
@@ -204,7 +204,7 @@ export default function SignupPage() {
           disabled={isLoading || !email || !password || !username || !dateOfBirth}
         >
           {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
-          Sign up
+          Đăng ký
         </button>
       </form>
     </div>
@@ -224,21 +224,21 @@ export default function SignupPage() {
 
         <div className="mt-8 pt-6 border-t border-elevated text-center">
           <p className="text-[12px] text-text-muted mb-6 leading-relaxed">
-            By continuing, you agree to our{" "}
-            <Link href="#" className="text-text-primary hover:underline">Terms of Service</Link>
-            {" "}and confirm that you have read our{" "}
-            <Link href="#" className="text-text-primary hover:underline">Privacy Policy</Link>.
+            Bằng cách tiếp tục, bạn đồng ý với{" "}
+            <Link href="#" className="text-text-primary hover:underline">Điều khoản Dịch vụ</Link>
+            {" "}và xác nhận rằng bạn đã đọc{" "}
+            <Link href="#" className="text-text-primary hover:underline">Chính sách Quyền riêng tư</Link> của chúng tôi.
           </p>
           
           <div className="flex items-center justify-center gap-2">
             <span className="text-[15px] text-text-primary">
-              Already have an account?
+              Bạn đã có tài khoản?
             </span>
             <Link 
               href="/login"
               className="text-brand font-bold text-[15px] hover:underline"
             >
-              Log in
+              Đăng nhập
             </Link>
           </div>
         </div>

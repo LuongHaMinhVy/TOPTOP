@@ -43,11 +43,26 @@ export function HomeIcon({ size = 32 }: { size?: number }) {
 export function TikNavItem({ icon, label, active, collapsed }: { icon: React.ReactNode; label: string; active?: boolean; collapsed: boolean }) {
   return (
     <button
-      className={`flex items-center rounded-[8px] w-full py-2 transition-colors ${active ? "text-brand font-extrabold" : "text-text-secondary hover:bg-hover hover:text-text-primary font-semibold"}`}
-      style={{ paddingLeft: 12, paddingRight: 12, justifyContent: collapsed ? "center" : "flex-start" }}
+      className={`flex items-center rounded-[8px] w-full py-2.5 transition-colors group ${
+        active 
+          ? "text-brand font-extrabold" 
+          : "text-text-secondary hover:bg-hover hover:text-text-primary font-bold"
+      }`}
+      style={{ 
+        paddingLeft: collapsed ? 0 : 8, 
+        paddingRight: 8, 
+        justifyContent: collapsed ? "center" : "flex-start" 
+      }}
     >
-      <span className="flex items-center justify-center w-8 h-8 flex-shrink-0">{icon}</span>
-      <span className="text-[16px] whitespace-nowrap" style={labelStyle(collapsed, 160, 12)}>{label}</span>
+      <span className="flex items-center justify-center w-8 h-8 flex-shrink-0 transition-transform group-active:scale-95">
+        {React.isValidElement(icon) ? React.cloneElement(icon as React.ReactElement, { strokeWidth: 2.5 } as any) : icon}
+      </span>
+      <span 
+        className="text-[17px] tracking-[-0.3px] whitespace-nowrap" 
+        style={labelStyle(collapsed, 160, 2)}
+      >
+        {label}
+      </span>
     </button>
   );
 }
